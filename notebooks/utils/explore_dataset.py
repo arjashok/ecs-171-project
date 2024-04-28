@@ -30,6 +30,8 @@ def visualize_relationships(df: pd.DataFrame) -> None:
     """
         Visualizations the relationships between the different features in a 
         dataframe.
+
+        @param df: dataset
     """
 
     # correlation + distributions
@@ -38,7 +40,7 @@ def visualize_relationships(df: pd.DataFrame) -> None:
     plt.title("Correlation Heatmap")
     plt.show()
 
-    sns.pairplot(df[infer_binary_columns(df)].sample(1000), kind="kde", diag_kind="kde")
+    sns.pairplot(df.drop(columns=infer_binary_columns(df)).sample(1000), diag_kind="kde")
     plt.title("Pair Plot of Features")
     plt.show()
 
@@ -46,6 +48,9 @@ def visualize_relationships(df: pd.DataFrame) -> None:
 def infer_binary_columns(df: pd.DataFrame, features: set=None) -> list[str]:
     """
         Infers binary distributions for specified columns.
+
+        @param df: dataset
+        @param features: [optional] which features to consider
     """
     
     # determine distribution via unique values
