@@ -31,8 +31,11 @@ def standardize_column_names(df: pd.DataFrame, inplace: bool=False) -> pd.DataFr
         """
 
         # transform
-        col_name = col_name.replace(" ", "")
-        return pattern.sub("_", col_name).lower()
+        col_name = col_name.strip()
+        col_name = col_name.replace(" ", "_")
+        col_name = pattern.sub("_", col_name)
+
+        return col_name.lower()
 
     # clean columns
     if not inplace:

@@ -12,7 +12,130 @@ import seaborn as sns
 from tqdm import tqdm
 
 
-# Utility Functions
+# Data Understanding Utility
+def check_integrity(df: pd.DataFrame, remove_na: bool=False, inplace: bool=True) -> None | pd.DataFrame:
+    """
+        Checks for missing/NA/NaN/None values and suspicious distributions (i.e. 
+        all one value, etc.). Prints a summary and removes if specified.
+
+        @param df: dataset
+        @param remove_na: whether to remove the missing values or not
+        @param inplace: whether to conduct operations on the original data
+    """
+
+    # check inplace
+    if remove_na and not inplace:
+        df = df.copy()
+
+    # tracking useless columns
+    useless_cols = list()
+
+    # iterate columns and check
+    print("<Checking Data Integrity>")
+    for col in df.columns:
+        # report
+        print("\tChecking", f"{f'<{col}>...':<25}", end="")
+        num_unique = df[col].nunique()
+        num_missing = df[col].isna().sum()
+
+        if num_unique > 1 and num_missing == 0:
+            print(f"\t<cleared>")
+        else:
+            if num_unique <= 1:
+                print(f"\n\t<WARNING> :: ONLY {num_unique} unique value(s)", end="")
+                useless_cols.append(col)
+            if num_missing > 0:
+                print(f"\n\t<WARNING> :: {num_missing}, i.e. {(num_missing / df.shape[0]) * 100:.2f}%, missing entries")
+    
+    # exporting
+    if remove_na:
+        # remove & report missing
+        num_bef = df.shape[0]
+        df.dropna(inplace=True)
+        num_aft = df.shape[0]
+
+        if num_aft != num_bef:
+            print(f"\t<CAUTION> removed {num_aft - num_bef}, i.e.",
+                  f"{(num_aft - num_bef) / num_bef * 100:.2f}%, entries from",
+                  f"{num_bef} --> {num_aft}")
+    
+        # remove & report cols
+        if len(useless_cols) > 0:
+            df.drop(columns=useless_cols, inplace=True)
+            print(f"\t<CAUTION> removed {len(useless_cols)} columns: {', '.join(useless_cols)}")
+        
+
+    if not inplace:
+        return df
+
+
+def infer_types(df: pd.DataFrame, apply_inference: bool=False, 
+                inplace: bool=True) -> tuple[set[str], set[str], None | pd.DataFrame]:
+    """
+        Infers the column types (i.e. categorical or numeric) based on 
+        distributions and uniqueness. This relies on heuristics about the 
+        proportion of entries.
+
+        @param df: dataset
+        @param apply_inference: whether to specify the dtypes gathered in the df 
+                                or not (doesn't really apply to ordinal beyond 
+                                float --> int conversions)
+        @param inplace: whether to modify the dataset obj directly
+    """
+
+    # trackers + setup
+    categ_cols = list()
+    numeric_cols = list()
+    THRESHOLD = 0.01            # expect at least 1/100th rows to have unique values
+    int_conv, str_conv, num_conv = 0, 0, 0
+
+    # inplace
+    if return_df := apply_inference and not inplace:
+        df = df.copy()
+
+    # check col types
+    print("<Dtype Inference>")
+    for col in df.columns:
+        # distribution
+        num_unique = df[col].nunique()
+        dtype = df[col].dtype
+
+        # inference
+        if num_unique / df.shape[0] < THRESHOLD:
+            # check conversion
+            if apply_inference:
+                if np.issubdtype(dtype, np.integer) or np.issubdtype(dtype, float):
+                    df[col] = df[col].astype(int)
+                    int_conv += 1
+                else:
+                    df[col] = df[col].astype(str)
+                    str_conv += 1
+            
+            # track categorical
+            categ_cols.append(col)
+        else:
+            # check conversion
+            if apply_inference:
+                if not (np.issubdtype(dtype, np.integer) or np.issubdtype(dtype, float)):
+                    # attempt conversion if not already numeric
+                    try:
+                        df[col] = df[col].astype(float)
+                        num_conv += 1
+                    except Exception as e:
+                        print(f"\t<WARNING> failed to convert {col} to numeric, {e}")
+
+            # track numeric
+            numeric_cols.append(col)
+
+    # report + export
+    print(f"\t{len(numeric_cols)} numeric vars, {len(categ_cols)} categorical vars")
+    if apply_inference:
+        print(f"\tEnforced {int_conv} vars to ordinal, {str_conv} vars to categorical, and {num_conv} to numeric")
+    
+    return numeric_cols, categ_cols, df if return_df else None
+
+
+# Distributions Utility
 def numerical_summary(df: pd.DataFrame) -> None:
     """
         Generates a few basic summaries about the dataset.
