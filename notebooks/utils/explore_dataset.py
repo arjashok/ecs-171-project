@@ -86,7 +86,8 @@ def infer_types(df: pd.DataFrame, apply_inference: bool=False,
     # trackers + setup
     categ_cols = list()
     numeric_cols = list()
-    THRESHOLD = 0.01            # expect at least 1/100th rows to have unique values
+    THRESHOLD = 0.01                            # expect at least 1/100th rows to have unique values
+    RAW_THRESHOLD = int(np.log(df.shape[0]))    # expect an ln increase of unique values
     int_conv, str_conv, num_conv = 0, 0, 0
 
     # inplace
@@ -101,7 +102,7 @@ def infer_types(df: pd.DataFrame, apply_inference: bool=False,
         dtype = df[col].dtype
 
         # inference
-        if num_unique / df.shape[0] < THRESHOLD:
+        if num_unique / df.shape[0] < THRESHOLD and num_unique <= RAW_THRESHOLD:
             # check conversion
             if apply_inference:
                 if np.issubdtype(dtype, np.integer) or np.issubdtype(dtype, float):
@@ -159,7 +160,7 @@ def visualize_relationships(df: pd.DataFrame) -> None:
 
     # correlation + distributions
     plt.figure(figsize=(10, 8))
-    sns.heatmap(df.corr(), annot=True, cmap="coolwarm", fmt=".2f")
+    sns.heatmap(df.drop(columns=infer_binary_columns(df)).corr(), annot=True, cmap="coolwarm", fmt=".2f")
     plt.title("Correlation Heatmap")
     plt.show()
 
@@ -225,6 +226,35 @@ def visualize_distributions(df: pd.DataFrame, plot_features: list[str]=None,
 
     plt.tight_layout()
     plt.show()
+
+
+def target_explorations(df: pd.DataFrame, target: str) -> dict[str, int]:
+    """
+        Explores the distribution of the target feature to check the necessity 
+        for sampling or otherwise redistributing the data.
+
+        @param df: dataset
+        @param target: name of the target feature in the dataset
+    """
+
+    # generate counts
+    target_counts = dict(df[target].value_counts())
+    num_labels = len(target_counts)
+    num_obs = len(df)
+    PADDING = 0.10                                                  # allow for +- 10% w/o error
+    
+    # check distributions
+    print(f"\n<Target Distribution \"{target}\">")
+    for label, count in target_counts.items():
+        print(f"Label `{label}` has {count} observations", end="")
+
+        if (count > num_obs / num_labels + PADDING * num_obs) or (count < num_obs / num_labels - PADDING * num_obs):
+            print(f" ==> <WARNING> outside of balanced range of observations")
+        else:
+            print(f" ==> within tolerance range...")
+    
+    # export
+    return target_counts
 
 
 # Testing

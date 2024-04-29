@@ -13,7 +13,7 @@ import re
 from tqdm import tqdm
 
 
-# Utility
+# Superficial Utility
 def standardize_column_names(df: pd.DataFrame, inplace: bool=False) -> pd.DataFrame | None:
     """
         Ensures column names are in a standardized format (lower case, no space, 
@@ -54,3 +54,10 @@ def present_feature_name(feat_name: str) -> str:
     # TODO
 
 
+# Feature-Engineering
+def up_sampling(df: pd.DataFrame, target: str, inplace: bool=False) -> None | pd.DataFrame:
+    """
+        Upsamples to balance the data within a range of tolerance.
+    """
+
+    pass
