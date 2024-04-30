@@ -146,8 +146,9 @@ def numerical_summary(df: pd.DataFrame) -> None:
 
     # print summaries
     print(f"<Peak Dataset>\n{df.head()}\n\n")
-    print(f"<DataFrame Info>\n{df.info()}\n\n")
-    print(f"<Distributions of Features>\n{df.describe()}\n\n")
+    print(f"<DataFrame Info>\n")
+    df.info()
+    print(f"\n\n<Distributions of Features>\n{df.describe()}\n\n")
 
 
 def visualize_relationships(df: pd.DataFrame) -> None:
