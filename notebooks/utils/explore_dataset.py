@@ -70,7 +70,7 @@ def check_integrity(df: pd.DataFrame, remove_na: bool=False, inplace: bool=True)
 
 
 def infer_types(df: pd.DataFrame, apply_inference: bool=False, 
-                inplace: bool=True) -> tuple[set[str], set[str], None | pd.DataFrame]:
+                inplace: bool=True) -> tuple[list[str], list[str], list[str]]:
     """
         Infers the column types (i.e. categorical or numeric) based on 
         distributions and uniqueness. This relies on heuristics about the 
@@ -84,10 +84,10 @@ def infer_types(df: pd.DataFrame, apply_inference: bool=False,
     """
 
     # trackers + setup
-    categ_cols = list()
+    ordinal_cols, nominal_cols = list(), list()
     numeric_cols = list()
-    THRESHOLD = 0.01                            # expect at least 1/100th rows to have unique values
-    RAW_THRESHOLD = int(np.log(df.shape[0]))    # expect an ln increase of unique values
+    THRESHOLD = 0.01                                # expect at least 1/100th rows to have unique values
+    RAW_THRESHOLD = int(np.log(df.shape[0])) + 10   # expect an ln-order increase of unique values
     int_conv, str_conv, num_conv = 0, 0, 0
 
     # inplace
@@ -105,15 +105,18 @@ def infer_types(df: pd.DataFrame, apply_inference: bool=False,
         if num_unique / df.shape[0] < THRESHOLD and num_unique <= RAW_THRESHOLD:
             # check conversion
             if apply_inference:
+                # ordinal
                 if np.issubdtype(dtype, np.integer) or np.issubdtype(dtype, float):
                     df[col] = df[col].astype(int)
                     int_conv += 1
+                    ordinal_cols.append(col)
+                # pure category
                 else:
                     df[col] = df[col].astype(str)
                     str_conv += 1
+                    nominal_cols.append(col)
             
             # track categorical
-            categ_cols.append(col)
         else:
             # check conversion
             if apply_inference:
@@ -129,11 +132,13 @@ def infer_types(df: pd.DataFrame, apply_inference: bool=False,
             numeric_cols.append(col)
 
     # report + export
-    print(f"\t{len(numeric_cols)} numeric vars, {len(categ_cols)} categorical vars")
+    print(f"\t{len(numeric_cols)} numeric vars, {len(nominal_cols)} nominal vars, {len(ordinal_cols)} ordinal vars")
     if apply_inference:
-        print(f"\tEnforced {int_conv} vars to ordinal, {str_conv} vars to categorical, and {num_conv} to numeric")
+        print(f"\tEnforced {int_conv} vars to ordinal, {str_conv} vars to nominal, and {num_conv} to numeric")
     
-    return numeric_cols, categ_cols, df if return_df else None
+    if not inplace:
+        return numeric_cols, ordinal_cols, nominal_cols, df
+    return numeric_cols, ordinal_cols, nominal_cols
 
 
 # Distributions Utility

@@ -26,7 +26,8 @@ class Dataset:
     # inferred members
     data: pd.DataFrame = field(default=None)                                    # dataset
     numeric_features: set[str] = field(default_factory=set)                     # numeric features
-    categorical_features: set[str] = field(default_factory=set)                 # categorical features
+    ordinal_features: set[str] = field(default_factory=set)                     # ordinal features
+    nominal_features: set[str] = field(default_factory=set)                     # nominal features
 
     # internal methods
     def __post_init__(self):
