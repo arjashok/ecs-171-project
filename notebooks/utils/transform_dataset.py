@@ -11,6 +11,8 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import re
 from tqdm import tqdm
+from sklearn.preprocessing import MinMaxScaler
+from sklearn.preprocessing import StandardScaler
 
 
 # Superficial Utility
@@ -52,6 +54,19 @@ def present_feature_name(feat_name: str) -> str:
     """
 
     # TODO
+
+def normalize_features(ds, features, how):
+    """
+        Standardizes all the numeric features.
+        @param ds - The dataset that we are normalizing the features for
+        @param features - features that need to be standardized
+        @param how - method used to standardize the features
+    """
+    if how == "minmax":
+        scaler = MinMaxScaler()
+    else:
+        scaler = StandardScaler()
+    ds.data[features] = scaler.fit_transform(ds.data[features])
 
 
 # Feature-Engineering
