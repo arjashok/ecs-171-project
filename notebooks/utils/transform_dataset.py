@@ -54,19 +54,30 @@ def present_feature_name(feat_name: str) -> str:
     """
 
     # TODO
+    pass
 
-def normalize_features(ds, features, how):
+
+def normalize_features(df: pd.DataFrame, features: list[str], how: str="minmax", 
+                       inplace: bool=False) -> None | pd.DataFrame:
     """
         Standardizes all the numeric features.
-        @param ds - The dataset that we are normalizing the features for
-        @param features - features that need to be standardized
-        @param how - method used to standardize the features
+        @param ds: the dataset that we are normalizing the features for
+        @param features: features that need to be standardized
+        @param how: method used to standardize the features
     """
+
+    # match
     if how == "minmax":
         scaler = MinMaxScaler()
     else:
         scaler = StandardScaler()
-    ds.data[features] = scaler.fit_transform(ds.data[features])
+    
+    # modify
+    if not inplace:
+        df = df.copy()
+    df[features] = scaler.fit_transform(df[features])
+
+    return None if inplace else df
 
 
 # Feature-Engineering

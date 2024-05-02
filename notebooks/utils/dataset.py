@@ -74,8 +74,40 @@ class Dataset:
         """
 
         # wrap call
-        self.numeric_features, self.categorical_features, _ = infer_types(
+        self.numeric_features, self.ordinal_features, self.nominal_features = infer_types(
             self.data,
             **kwargs
         )
+
+
+    def normalize_features(self, **kwargs) -> None:
+        """
+            Wraps call to explore dataset utility fn of the same name. Refer to 
+            underlying function documentation for key-word args.
+        """
+
+        # wrap call
+        normalize_features(self.data, self.numeric_features, inplace=True, **kwargs)
+
+
+    def standardize_column_names(self, **kwargs) -> None:
+        """
+            Wraps call to explore dataset utility fn of the same name. Refer to 
+            underlying function documentation for key-word args.
+        """
+
+        # wrap call
+        standardize_column_names(self.data, inplace=True)
+
+
+    def up_sampling(self, **kwargs) -> None:
+        """
+            Wraps call to explore dataset utility fn of the same name. Refer to 
+            underlying function documentation for key-word args.
+        """
+
+        # wrap call
+        up_sampling(self.data, target=self.target, inplace=True, **kwargs)
+
+
 
