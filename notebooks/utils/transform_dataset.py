@@ -57,7 +57,7 @@ def present_feature_name(feat_name: str) -> str:
     pass
 
 
-def normalize_features(df: pd.DataFrame, features: list[str], how: str="minmax", 
+def normalize_features(df: pd.DataFrame, features: list[str], how: str="zscore", 
                        inplace: bool=False) -> None | pd.DataFrame:
     """
         Standardizes all the numeric features.
@@ -69,8 +69,10 @@ def normalize_features(df: pd.DataFrame, features: list[str], how: str="minmax",
     # match
     if how == "minmax":
         scaler = MinMaxScaler()
-    else:
+    elif how == "zscore":
         scaler = StandardScaler()
+    else:
+        raise ValueError("not valid scaling method")
     
     # modify
     if not inplace:
