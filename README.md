@@ -50,17 +50,10 @@ contexts.
 
 # Deliverables
 
-  -----------------------------------------------------------------------
-  **Deliverable**                                             **Due
-                                                              Date**
-  ----------------------------------------------------------- -----------
-  EDA + Feature Selection                                     5/05
-
-  Model Construction                                          5/19
-
-  Model Evaluation / Fine-Tuning                              5/26
-
-  Model Deployment / Fine-Tuning                              6/02
-
-  Application / Final Paper Submission                        6/08
-  -----------------------------------------------------------------------
+|**Deliverable**                                            | **Due Date**|
+|-----------------------------------------------------------|-----------|
+|EDA + Feature Selection                                    | 5/05|
+|Model Construction                                         | 5/19|
+|Model Evaluation / Fine-Tuning                             | 5/26|
+|Model Deployment / Fine-Tuning                             | 6/02|
+|Application / Final Paper Submission                       | 6/08|
