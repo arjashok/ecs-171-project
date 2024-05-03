@@ -57,6 +57,23 @@ def present_feature_name(feat_name: str) -> str:
     pass
 
 
+# Functional Utility
+def split_target(df: pd.DataFrame, target: str, feature_cols: list[str]=None) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """
+        Splits into two dataframes, X & y.
+
+        @param df: dataset
+        @param target: feature name
+    """
+
+    # return split
+    if feature_cols is None:
+        feature_cols = list(df.columns.difference(target))
+    
+    return df[feature_cols], df[target].to_frame(name=target)
+
+
+# Feature-Engineering
 def normalize_features(df: pd.DataFrame, features: list[str], how: str="zscore", 
                        inplace: bool=False) -> None | pd.DataFrame:
     """
@@ -82,7 +99,6 @@ def normalize_features(df: pd.DataFrame, features: list[str], how: str="zscore",
     return None if inplace else df
 
 
-# Feature-Engineering
 def up_sampling(df: pd.DataFrame, target: str, inplace: bool=False) -> None | pd.DataFrame:
     """
         Upsamples to balance the data within a range of tolerance.
