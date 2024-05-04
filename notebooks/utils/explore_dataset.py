@@ -261,7 +261,32 @@ def target_explorations(df: pd.DataFrame, target: str) -> dict[str, int]:
     
     # export
     return target_counts
+    
+def detect_outliers(df):
 
+    """
+        Detects outliers in the dataset using the IQR method.
+        Plots the distribution of the feature and highlights the outliers.
+
+        @param df: dataset
+    """
+    for i, feature in enumerate(df, 1):
+
+
+        Q1 = np.percentile(df[feature], 25)
+        Q3 = np.percentile(df[feature], 75)
+        IQR = Q3 - Q1
+
+        lower = Q1 - 1.5 * IQR
+        upper = Q3 + 1.5 * IQR
+        outliers = [x for x in df[feature] if x < lower or x > upper]
+        # plt.subplot(2, 12, i)
+        plt.scatter(outliers, [0] * len(outliers), color='red', label='outliers')
+        sns.histplot(df[feature], kde=True)
+        plt.title(feature + ' (normal)')
+        plt.tight_layout()
+        plt.show()
+        print("upper bound: ", upper, "\nlower bound: ", lower,  "\noutliers:", outliers, "\nNum ouliers: ", len(outliers))
 
 # Testing
 if __name__ == "__main__":
