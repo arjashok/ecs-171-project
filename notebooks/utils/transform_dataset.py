@@ -69,26 +69,10 @@ def split_target(df: pd.DataFrame, target: str, feature_cols: list[str]=None) ->
 
     # return split
     if feature_cols is None:
-        feature_cols = list(df.columns.difference(target))
+        feature_cols = list(set(df.columns) - {target})
     
-    return df[feature_cols], df[target].to_frame(name=target)
-
-
-# Feature-Engineering
-# Functional Utility
-def split_target(df: pd.DataFrame, target: str, feature_cols: list[str]=None) -> tuple[pd.DataFrame, pd.DataFrame]:
-    """
-        Splits into two dataframes, X & y.
-
-        @param df: dataset
-        @param target: feature name
-    """
-
-    # return split
-    if feature_cols is None:
-        feature_cols = list(df.columns.difference(target))
-    
-    return df[feature_cols], df[target].to_frame(name=target)
+    X, y = df[feature_cols], df[target]
+    return X, y
 
 
 # Feature-Engineering

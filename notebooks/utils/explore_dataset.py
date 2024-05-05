@@ -10,6 +10,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 from tqdm import tqdm
+from pprint import pprint
 
 
 # Data Understanding Utility
@@ -91,13 +92,15 @@ def infer_types(df: pd.DataFrame, apply_inference: bool=False,
     int_conv, str_conv, num_conv = 0, 0, 0
 
     # inplace
-    if return_df := apply_inference and not inplace:
+    return_df = apply_inference and not inplace
+    if not inplace:
         df = df.copy()
 
     # check col types
     print("<Dtype Inference>")
     for col in df.columns:
         # distribution
+        print(col)
         num_unique = df[col].nunique()
         dtype = df[col].dtype
 
@@ -105,11 +108,16 @@ def infer_types(df: pd.DataFrame, apply_inference: bool=False,
         if num_unique / df.shape[0] < THRESHOLD and num_unique <= RAW_THRESHOLD:
             # check conversion
             if apply_inference:
-                # ordinal
+                # ordinal or nominal
                 if np.issubdtype(dtype, np.integer) or np.issubdtype(dtype, float):
                     df[col] = df[col].astype(int)
+
+                    # binary is nominal
+                    if num_unique <= 2:
+                        nominal_cols.append(col)
+                    else:
+                        ordinal_cols.append(col)
                     int_conv += 1
-                    ordinal_cols.append(col)
                 # pure category
                 else:
                     df[col] = df[col].astype(str)
@@ -136,9 +144,18 @@ def infer_types(df: pd.DataFrame, apply_inference: bool=False,
     if apply_inference:
         print(f"\tEnforced {int_conv} vars to ordinal, {str_conv} vars to nominal, and {num_conv} to numeric")
     
-    if not inplace:
+    if return_df:
         return numeric_cols, ordinal_cols, nominal_cols, df
     return numeric_cols, ordinal_cols, nominal_cols
+
+
+def print_collection(collection: list | set | dict) -> None:
+    """
+        Pretty prints a collection.
+    """
+
+    # print
+    pprint(collection)
 
 
 # Distributions Utility
@@ -262,17 +279,16 @@ def target_explorations(df: pd.DataFrame, target: str) -> dict[str, int]:
     # export
     return target_counts
     
-def detect_outliers(df):
 
+def detect_outliers(df):
     """
         Detects outliers in the dataset using the IQR method.
         Plots the distribution of the feature and highlights the outliers.
 
         @param df: dataset
     """
+
     for i, feature in enumerate(df, 1):
-
-
         Q1 = np.percentile(df[feature], 25)
         Q3 = np.percentile(df[feature], 75)
         IQR = Q3 - Q1
@@ -280,13 +296,16 @@ def detect_outliers(df):
         lower = Q1 - 1.5 * IQR
         upper = Q3 + 1.5 * IQR
         outliers = [x for x in df[feature] if x < lower or x > upper]
+
         # plt.subplot(2, 12, i)
         plt.scatter(outliers, [0] * len(outliers), color='red', label='outliers')
         sns.histplot(df[feature], kde=True)
         plt.title(feature + ' (normal)')
         plt.tight_layout()
         plt.show()
+        
         print("upper bound: ", upper, "\nlower bound: ", lower,  "\noutliers:", outliers, "\nNum ouliers: ", len(outliers))
+
 
 # Testing
 if __name__ == "__main__":
