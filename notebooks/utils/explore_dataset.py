@@ -280,7 +280,7 @@ def target_explorations(df: pd.DataFrame, target: str) -> dict[str, int]:
     return target_counts
     
 
-def detect_outliers(df):
+def detect_outliers(df: pd.DataFrame, features: list[str]=None) -> None:
     """
         Detects outliers in the dataset using the IQR method.
         Plots the distribution of the feature and highlights the outliers.
@@ -288,7 +288,10 @@ def detect_outliers(df):
         @param df: dataset
     """
 
-    for i, feature in enumerate(df, 1):
+    if features is None:
+        features = list(df.columns)
+
+    for i, feature in enumerate(df[features], 1):
         Q1 = np.percentile(df[feature], 25)
         Q3 = np.percentile(df[feature], 75)
         IQR = Q3 - Q1
@@ -304,7 +307,7 @@ def detect_outliers(df):
         plt.tight_layout()
         plt.show()
         
-        print("upper bound: ", upper, "\nlower bound: ", lower,  "\noutliers:", outliers, "\nNum ouliers: ", len(outliers))
+        print("Upper Bound: ", upper, "\nLower Bound: ", lower, "\nNum Outliers: ", len(outliers))
 
 
 # Testing
