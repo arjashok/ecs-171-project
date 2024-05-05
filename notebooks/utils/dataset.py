@@ -49,7 +49,7 @@ class Dataset:
         self.feature_set.remove(self.target)
     
 
-    def set_features(self, feature_set: list[str]) -> None:
+    def set_features(self, feature_set: list[str]=None, ignore_features: list[str]=None) -> None:
         """
             Sets the features if manual specification is required. Note, 
             automatically verifies the target isn't contained within the feature 
@@ -57,6 +57,10 @@ class Dataset:
 
             @param feature_set: iterable containing the narrowed features
         """
+
+        # fill feature set
+        if feature_set is None:
+            feature_set = set(self.data.columns) - set([self.target]) - set(ignore_features)
 
         # set & confirm
         if self.target in feature_set:

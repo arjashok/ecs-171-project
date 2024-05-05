@@ -28,6 +28,7 @@ def visualize_target_corr(df: pd.DataFrame, target: str, numeric_features: list[
     """
 
     # setup and fill args
+    print("\n<Target Correlations>")
     if feature_set is None:
         feature_set = list(df.columns)
     feature_set = set(feature_set)
@@ -85,6 +86,9 @@ def collinearity_check(df: pd.DataFrame, target: str, threshold: float=0.25,
         @param min_list: number of features to list at the minimum
     """
 
+    # setup
+    print("\n<Collinearity Check>")
+
     # generate correlations by taking magnitude and keeping only upper triangular portion (avoid duplicates and same-same corr)
     correlations = df.drop(columns=target).corr()
 
@@ -101,7 +105,6 @@ def collinearity_check(df: pd.DataFrame, target: str, threshold: float=0.25,
     top_corr_pairs.columns = ["feature-1", "feature-2", "correlation"]
 
     # export
-    pprint(top_corr_pairs)
     return top_corr_pairs
 
 
@@ -120,6 +123,7 @@ def feature_selection(df: pd.DataFrame, target: str, regression_type: str="lasso
     """
 
     # execute params
+    print("\n<Feature Selection>")
     regression_lookup = {
         "lasso": {
             "classification": linear_model.LogisticRegression(penalty="l1", solver="saga", max_iter=100000),
@@ -163,11 +167,6 @@ def feature_selection(df: pd.DataFrame, target: str, regression_type: str="lasso
         pruned_features = {k: v for i, (k, v) in enumerate(pruned_features.items()) if i < 5}
 
     kept_features = list(set(features) - set(pruned_features))
-
-    print_collection(coefs_lookup)
-    print_collection(pruned_features)
-    print_collection(kept_features)
-
     return pruned_features, kept_features, coefs_lookup 
 
 
