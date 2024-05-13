@@ -117,7 +117,7 @@ class TreeClassifier:
             return
         
         # update
-        for hp, val in hyperparams:
+        for hp, val in hyperparams.items():
             # include hyperparameter even if not expected
             if hp not in self.hyperparams:
                 print(f"<WARNING> unexpected hyperparameter {hp} found; included anyways with value {val}")
@@ -156,9 +156,9 @@ class TreeClassifier:
         # add row for each label's performance
         add_rows = ([
                 pd.DataFrame({
-                "model-type": "XGBoost",
+                "model-type": ["XGBoost"],
                 **{k: [v] for k, v in score_dict.items()},
-                "path": {report_name}
+                "path": [report_name]
             })
             for score_dict in self.score
         ])
@@ -185,7 +185,7 @@ class TreeClassifier:
             print("<WARNING> no lookup found for saved models :(")
             return False
         model_reports = pd.read_csv(self.model_lookup_path, engine="c")
-        model_reports = model_reports[model_reports["model-type"] == "tree"]
+        model_reports = model_reports[model_reports["model-type"] == "XGBoost"]
 
         if model_reports.shape[0] == 0:
             print("<WARNING> found 0 entries in model lookup :(")
@@ -374,6 +374,10 @@ class LinearNN(nn.Module):
             Propagate information through network.
         """
 
+        # ensure dtypes
+        x = x.to(torch.float32)
+
+        # push forward
         out = self.fc_input(x)
         out = self.relu(out)
         for layer in self.hidden_layers:
@@ -487,14 +491,14 @@ class MLPClassifier:
             return
         
         # update
-        for hp, val in hyperparams:
+        for hp, val in hyperparams.items():
             # include hyperparameter even if not expected
             if hp not in self.hyperparams:
                 print(f"<WARNING> unexpected hyperparameter {hp} found; included anyways with value {val}")
             self.hyperparams[hp] = val
 
         # update model
-        self.model = LinearNN(**self.hyperparams)
+        self.model = LinearNN(**self.hyperparams).to(self.device)
 
 
     ## utility
@@ -526,9 +530,9 @@ class MLPClassifier:
         # add row for each label's performance
         add_rows = ([
                 pd.DataFrame({
-                "model-type": "FFNN",
+                "model-type": ["FFNN"],
                 **{k: [v] for k, v in score_dict.items()},
-                "path": {report_name}
+                "path": [report_name]
             })
             for score_dict in self.score
         ])
@@ -555,7 +559,7 @@ class MLPClassifier:
             print("<WARNING> no lookup found for saved models :(")
             return False
         model_reports = pd.read_csv(self.model_lookup_path, engine="c")
-        model_reports = model_reports[model_reports["model-type"] == "ffnn"]
+        model_reports = model_reports[model_reports["model-type"] == "FFNN"]
 
         if model_reports.shape[0] == 0:
             print("<WARNING> found 0 entries in model lookup :(")
@@ -673,7 +677,7 @@ class MLPClassifier:
         """
 
         # gen tensors
-        X = torch.tensor.from_numpy(X.to_numpy()).to(self.device)
+        X = torch.from_numpy(X.to_numpy()).to(self.device)
 
         # predict without backprop
         self.model.eval()
@@ -683,10 +687,10 @@ class MLPClassifier:
             outputs = self.model(X)
 
             # append predictions & the raw prediction value
-            confidence, predictions = torch.max(outputs, 1, dim=1)
+            confidence, predictions = torch.max(outputs, 1)
 
         # wrap predictions
-        return np.array(predictions), np.array(confidence)
+        return np.array(predictions.cpu()), np.array(confidence.cpu())
 
 
     def optimize_hyperparams(self, grid_search: dict[str, list[int | float | str]]=None,
