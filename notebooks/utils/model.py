@@ -13,6 +13,7 @@ import torch
 import torch.nn as nn
 from torch.optim import Adam
 from torch.utils.data import DataLoader, Dataset
+from skorch import NeuralNetClassifier
 from tqdm import tqdm
 from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.model_selection import GridSearchCV, train_test_split
@@ -163,6 +164,7 @@ class TreeClassifier:
             for score_dict in self.score
         ])
         model_reports = pd.concat([model_reports, *add_rows], ignore_index=True)
+        model_reports.drop_duplicates(inplace=True)
         model_reports.to_csv(self.model_lookup_path, index=False)
 
     
@@ -214,7 +216,7 @@ class TreeClassifier:
         
         else:
             # stable sort
-            model_reports.sort_values(by=priority_list)
+            model_reports.sort_values(by=priority_list, inplace=True)
             path = model_reports["path"][0]
         
         # load model
@@ -388,6 +390,44 @@ class LinearNN(nn.Module):
         return out
 
 
+    # def fit(self, X, y) -> Any:
+    #     """
+    #         Wraps a fit method for use in the gridsearch functionality.
+
+    #         @param X: train features
+    #         @param y: train ground truths
+            
+    #         @returns reference to self
+    #     """
+
+    #     # model.train #
+    #     # setup gradient descent
+    #     self.optimizer = Adam(self.model.parameters(), lr=self.model.learning_rate)
+    #     self.loss_fn = nn.CrossEntropyLoss()
+    #     train_loader = DataLoader(
+    #         TabularDataset(X=self.X_train, y=self.y_train, device=self.device),
+    #         batch_size=self.model.batch_size,
+    #         shuffle=True
+    #     )
+
+    #     # fit model & track loss
+    #     for epoch in range(self.model.num_epochs):
+    #         running_loss = 0.0
+    #         for inputs, labels in train_loader:
+    #             # forward pass
+    #             self.optimizer.zero_grad()
+    #             outputs = self.model(inputs)
+
+    #             # loss + backprop
+    #             loss = self.loss_fn(outputs, labels)
+    #             loss.backward()
+    #             self.optimizer.step()
+
+    #             # track loss
+    #             running_loss += loss.item()
+
+
+
 class TabularDataset(Dataset):
     def __init__(self, X, device, y=None):
         self.X = torch.tensor(X.to_numpy(), dtype=torch.float32).to(device)
@@ -537,6 +577,7 @@ class MLPClassifier:
             for score_dict in self.score
         ])
         model_reports = pd.concat([model_reports, *add_rows], ignore_index=True)
+        model_reports.drop_duplicates(inplace=True)
         model_reports.to_csv(self.model_lookup_path, index=False)
 
     
@@ -588,14 +629,14 @@ class MLPClassifier:
         
         else:
             # stable sort
-            model_reports.sort_values(by=priority_list)
+            model_reports.sort_values(by=priority_list, inplace=True, ignore_index=True)
             path = model_reports["path"][0]
         
         # load model
         if path is None:
             return False
         
-        self.model = LinearNN(**self.hyperparams)
+        self.model = LinearNN(**self.hyperparams).to(self.device)
         self.model.load_state_dict(torch.load(f"../models/weights/{path}.pt"))
         self.model.eval()
         self.hyperparams = json.load(open(f"../models/hyperparams/{path}.json", "r"))
@@ -603,7 +644,7 @@ class MLPClassifier:
         return True
 
 
-    def train_model(self) -> None:
+    def train_model(self, verbose: int=0) -> None:
         """
             Trains the model, assuming no hyperparameter optimization.
         """
@@ -620,7 +661,7 @@ class MLPClassifier:
         # fit model & track loss
         for epoch in range(self.model.num_epochs):
             running_loss = 0.0
-            for inputs, labels in tqdm(train_loader):
+            for inputs, labels in tqdm(train_loader, disable=(verbose < 1)):
                 # forward pass
                 self.optimizer.zero_grad()
                 outputs = self.model(inputs)
@@ -633,8 +674,9 @@ class MLPClassifier:
                 # track loss
                 running_loss += loss.item()
 
-            # Print statistics
-            print(f"Epoch {epoch + 1}/{self.model.num_epochs}, Loss: {running_loss / len(train_loader)}")
+            # print stats if wanted
+            if verbose > 0:
+                print(f"Epoch {epoch + 1}/{self.model.num_epochs}, Loss: {running_loss / len(train_loader)}")
 
 
     def test_model(self) -> None:
@@ -711,8 +753,8 @@ class MLPClassifier:
         if grid_search is None:
             grid_search = {
                 "learning_rate": [10 ** (-i) for i in range(5)],
-                "input_size": self.X_train.shape[1],
-                "output_size": self.y_train.nunique(),
+                "input_size": [self.X_train.shape[1]],
+                "output_size": [self.y_train.nunique()],
                 "hidden_size": [32, 64, 96, 128],
                 "num_hidden": [1, 2, 3],
                 "num_epochs": [10, 25],
@@ -721,7 +763,10 @@ class MLPClassifier:
         
         # conduct search
         searcher = GridSearchCV(
-            self.model,
+            NeuralNetClassifier(
+                LinearNN,
+                **self.hyperparams
+            ),
             grid_search,
             scoring="accuracy",
             refit=True,
