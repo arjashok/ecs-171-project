@@ -11,6 +11,8 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import torch
 import torch.nn as nn
+from torch.optim import Adam
+from torch.utils.data import DataLoader, Dataset
 from tqdm import tqdm
 from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.model_selection import GridSearchCV, train_test_split
@@ -136,14 +138,14 @@ class TreeClassifier:
             k: sum(d[k] for d in self.score) / len(self.score) 
             for k in self.score[0]
         })
-        report_name = ("-".join([
+        report_name = "tree-classifier-" + ("-".join([
             f"[{metric[0]}_{perf:.4f}]" for metric, perf in mean_scores.items()
             if metric[0] not in ["l", "s"]
         ]))
 
         # save both
-        json.dump(self.hyperparams, open(f"../models/hyperparams/tree-classifier-{report_name}.json", "w"), indent=4)
-        pickle.dump(self.model, open(f"../models/weights/tree-classifier-{report_name}.pickle", "wb"))
+        json.dump(self.hyperparams, open(f"../models/hyperparams/{report_name}.json", "w"), indent=4)
+        pickle.dump(self.model, open(f"../models/weights/{report_name}.pickle", "wb"))
 
         # save lookup
         if os.path.exists(self.model_lookup_path):
@@ -156,7 +158,7 @@ class TreeClassifier:
                 pd.DataFrame({
                 "model-type": "XGBoost",
                 **{k: [v] for k, v in score_dict.items()},
-                "path": f"tree-classifier-{report_name}"
+                "path": {report_name}
             })
             for score_dict in self.score
         ])
@@ -183,6 +185,8 @@ class TreeClassifier:
             print("<WARNING> no lookup found for saved models :(")
             return False
         model_reports = pd.read_csv(self.model_lookup_path, engine="c")
+        model_reports = model_reports[model_reports["model-type"] == "tree"]
+
         if model_reports.shape[0] == 0:
             print("<WARNING> found 0 entries in model lookup :(")
             return False
@@ -342,35 +346,56 @@ class TreeClassifier:
         self.save_model()
 
 
-class LinearNN(nn.module):
-    def __init__(self, input_size, hidden_size, output_size, num_hidden_layers):
+class LinearNN(nn.Module):
+    def __init__(self, input_size, hidden_size, output_size, num_hidden, num_epochs, learning_rate, batch_size):
         """
             Initialize model based on hyperparams. This is a normal FFNN with 
             ReLU
         """
-
+        
+        # setup model arch
         super(LinearNN, self).__init__()
         self.fc_input = nn.Linear(input_size, hidden_size)
         self.hidden_layers = nn.ModuleList([
-            nn.Linear(hidden_size, hidden_size) for _ in range(num_hidden_layers)
+            nn.Linear(hidden_size, hidden_size) for _ in range(num_hidden)
         ])
         self.fc_output = nn.Linear(hidden_size, output_size)
         self.relu = nn.ReLU()
-        self.softmax = nn.Softmax(dim=1)
+        self.classify_fn = nn.Sigmoid() #nn.Softmax(dim=1)
+
+        # setup params
+        self.num_epochs = num_epochs
+        self.learning_rate = learning_rate
+        self.batch_size = batch_size
+
 
     def forward(self, x):
         """
             Propagate information through network.
         """
-        
+
         out = self.fc_input(x)
         out = self.relu(out)
         for layer in self.hidden_layers:
             out = layer(out)
             out = self.relu(out)
         out = self.fc_output(out)
-        out = self.softmax(out)
+        out = self.classify_fn(out)
         return out
+
+
+class TabularDataset(Dataset):
+    def __init__(self, X, device, y=None):
+        self.X = torch.tensor(X.to_numpy(), dtype=torch.float32).to(device)
+
+        if y is not None:
+            self.y = torch.tensor(y, dtype=torch.long).to(device)
+
+    def __len__(self):
+        return len(self.X)
+
+    def __getitem__(self, idx):
+        return self.X[idx], self.y[idx]
 
 
 @dataclass(slots=True)
@@ -382,8 +407,13 @@ class MLPClassifier:
 
     # inferred members
     data: pd.DataFrame = field(default=None)                                    # dataset
-    model: Any = field(default=None)                                            # underlying model
+    model: LinearNN = field(default=None)                                       # underlying model
     model_lookup_path: str = field(default="../models/model_lookup.csv")        # model lookup
+    optimizer: Any = field(default=None)                                        # optimizer function
+    loss_fn: Any = field(default=None)                                          # loss for neural network
+    device: Any = field(
+        default_factory=lambda: torch.device("cuda" if torch.cuda.is_available else "cpu")
+    )                                                                           # device to use; tries for GPU optimization
 
     # calculated members
     X_train: np.ndarray = field(default=None)                                   # data for training/testing
@@ -423,7 +453,7 @@ class MLPClassifier:
         # model
         self.set_hyperparams(self.hyperparams, optimize=False)
         if self.model is None:
-            self.model = LinearNN(**self.hyperparams)
+            self.model = LinearNN(**self.hyperparams).to(self.device)
 
 
     # external methods
@@ -443,8 +473,8 @@ class MLPClassifier:
             "hidden_size": 64,
             "num_hidden": 2,
             "num_epochs": 25,
-            "batch_size": self.X_train.shape[0] // 100,
-
+            "batch_size": 32,
+            "learning_rate": 0.01
         }
 
         # if no update is required
@@ -464,7 +494,7 @@ class MLPClassifier:
             self.hyperparams[hp] = val
 
         # update model
-        self.model = GradientBoostingClassifier(**self.hyperparams)
+        self.model = LinearNN(**self.hyperparams)
 
 
     ## utility
@@ -478,14 +508,14 @@ class MLPClassifier:
             k: sum(d[k] for d in self.score) / len(self.score) 
             for k in self.score[0]
         })
-        report_name = ("-".join([
+        report_name = "ffnn-classifier-" + ("-".join([
             f"[{metric[0]}_{perf:.4f}]" for metric, perf in mean_scores.items()
             if metric[0] not in ["l", "s"]
         ]))
 
         # save both
-        json.dump(self.hyperparams, open(f"../models/hyperparams/tree-classifier-{report_name}.json", "w"), indent=4)
-        pickle.dump(self.model, open(f"../models/weights/tree-classifier-{report_name}.pickle", "wb"))
+        json.dump(self.hyperparams, open(f"../models/hyperparams/{report_name}.json", "w"), indent=4)
+        torch.save(self.model.state_dict(), f"../models/weights/{report_name}.pt")
 
         # save lookup
         if os.path.exists(self.model_lookup_path):
@@ -496,9 +526,9 @@ class MLPClassifier:
         # add row for each label's performance
         add_rows = ([
                 pd.DataFrame({
-                "model-type": "XGBoost",
+                "model-type": "FFNN",
                 **{k: [v] for k, v in score_dict.items()},
-                "path": f"tree-classifier-{report_name}"
+                "path": {report_name}
             })
             for score_dict in self.score
         ])
@@ -525,6 +555,8 @@ class MLPClassifier:
             print("<WARNING> no lookup found for saved models :(")
             return False
         model_reports = pd.read_csv(self.model_lookup_path, engine="c")
+        model_reports = model_reports[model_reports["model-type"] == "ffnn"]
+
         if model_reports.shape[0] == 0:
             print("<WARNING> found 0 entries in model lookup :(")
             return False
@@ -558,7 +590,10 @@ class MLPClassifier:
         # load model
         if path is None:
             return False
-        self.model = pickle.load(open(f"../models/weights/{path}.pickle", "rb"))
+        
+        self.model = LinearNN(**self.hyperparams)
+        self.model.load_state_dict(torch.load(f"../models/weights/{path}.pt"))
+        self.model.eval()
         self.hyperparams = json.load(open(f"../models/hyperparams/{path}.json", "r"))
 
         return True
@@ -569,8 +604,33 @@ class MLPClassifier:
             Trains the model, assuming no hyperparameter optimization.
         """
 
-        # fit model
-        self.model.fit(self.X_train, self.y_train)
+        # setup gradient descent
+        self.optimizer = Adam(self.model.parameters(), lr=self.model.learning_rate)
+        self.loss_fn = nn.CrossEntropyLoss()
+        train_loader = DataLoader(
+            TabularDataset(X=self.X_train, y=self.y_train, device=self.device),
+            batch_size=self.model.batch_size,
+            shuffle=True
+        )
+
+        # fit model & track loss
+        for epoch in range(self.model.num_epochs):
+            running_loss = 0.0
+            for inputs, labels in tqdm(train_loader):
+                # forward pass
+                self.optimizer.zero_grad()
+                outputs = self.model(inputs)
+
+                # loss + backprop
+                loss = self.loss_fn(outputs, labels)
+                loss.backward()
+                self.optimizer.step()
+
+                # track loss
+                running_loss += loss.item()
+
+            # Print statistics
+            print(f"Epoch {epoch + 1}/{self.model.num_epochs}, Loss: {running_loss / len(train_loader)}")
 
 
     def test_model(self) -> None:
@@ -579,7 +639,7 @@ class MLPClassifier:
         """
 
         # predict
-        y_pred = self.predict(self.X_test)
+        y_pred, y_conf = self.predict(self.X_test)
         y_test = self.y_test
 
         # metrics + report
@@ -605,15 +665,28 @@ class MLPClassifier:
         self.save_model()
 
 
-    def predict(self, X: np.ndarray) -> np.array:
+    def predict(self, X: np.ndarray) -> tuple[np.array, np.array]:
         """
             Generates predictions for use in the test data.
 
             @param X: data to predict on
         """
 
+        # gen tensors
+        X = torch.tensor.from_numpy(X.to_numpy()).to(self.device)
+
+        # predict without backprop
+        self.model.eval()
+
+        with torch.no_grad():
+            # forward pass
+            outputs = self.model(X)
+
+            # append predictions & the raw prediction value
+            confidence, predictions = torch.max(outputs, 1, dim=1)
+
         # wrap predictions
-        return self.model.predict(X)
+        return np.array(predictions), np.array(confidence)
 
 
     def optimize_hyperparams(self, grid_search: dict[str, list[int | float | str]]=None,
@@ -633,29 +706,14 @@ class MLPClassifier:
         # setup search
         if grid_search is None:
             grid_search = {
-                "loss": ["log_loss"],
-                "learning_rate": [10 ** (-i) for i in range(4)],
-                "n_estimators": [100, 500],
-                "criterion": ["friedman_mse"],
-                "min_samples_split": [2],
-                "min_samples_leaf": [2, 10],
-                "max_depth": [3, 5],
-                "n_iter_no_change": [5],
-                "max_features": ["log2"],
-                "tol": [1e-4]
+                "learning_rate": [10 ** (-i) for i in range(5)],
+                "input_size": self.X_train.shape[1],
+                "output_size": self.y_train.nunique(),
+                "hidden_size": [32, 64, 96, 128],
+                "num_hidden": [1, 2, 3],
+                "num_epochs": [10, 25],
+                "batch_size": [32, 64, 128]
             }
-            # grid_search = {
-            #     "loss": ["log_loss"],
-            #     "learning_rate": [10 ** (-i) for i in range(1)],
-            #     "n_estimators": [100],
-            #     "criterion": ["friedman_mse"],
-            #     "min_samples_split": [2],
-            #     "min_samples_leaf": [2],
-            #     "max_depth": [3],
-            #     "n_iter_no_change": [5],
-            #     "max_features": ["log2"],
-            #     "tol": [1e-4]
-            # }
         
         # conduct search
         searcher = GridSearchCV(
