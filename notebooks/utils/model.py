@@ -350,7 +350,7 @@ class TreeClassifier:
 
 
 class LinearNN(nn.Module):
-    def __init__(self, input_size, hidden_size, output_size, num_hidden, num_epochs, learning_rate, batch_size):
+    def __init__(self, input_size, hidden_size, output_size, num_hidden, num_epochs, learning_rate, batch_size, classify_fn):
         """
             Initialize model based on hyperparams. This is a normal FFNN with 
             ReLU
@@ -364,7 +364,7 @@ class LinearNN(nn.Module):
         ])
         self.fc_output = nn.Linear(hidden_size, output_size)
         self.relu = nn.ReLU()
-        self.classify_fn = nn.Sigmoid() #nn.Softmax(dim=1)
+        self.classify_fn = nn.Sigmoid() if classify_fn == "sigmoid" else nn.Softmax(dim=1)
 
         # setup params
         self.num_epochs = num_epochs
@@ -559,7 +559,8 @@ class MLPClassifier:
             "num_hidden": 2,
             "num_epochs": 25,
             "batch_size": 32,
-            "learning_rate": 0.01
+            "learning_rate": 0.01,
+            "classify_fn": "sigmoid"
         }
 
         # if no update is required

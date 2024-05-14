@@ -1,9 +1,10 @@
 {
     "input_size": 21,
     "output_size": 3,
-    "hidden_size": 1,
-    "num_hidden": 2,
-    "num_epochs": 25,
-    "batch_size": 64,
-    "learning_rate": 0.001
+    "hidden_size": 32,
+    "num_hidden": 32,
+    "num_epochs": 50,
+    "batch_size": 128,
+    "learning_rate": 0.0005,
+    "classify_fn": "softmax"
 }
