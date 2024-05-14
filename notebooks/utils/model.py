@@ -23,6 +23,7 @@ import pickle
 import json
 import os
 import datetime
+from itertools import product
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -390,42 +391,82 @@ class LinearNN(nn.Module):
         return out
 
 
-    # def fit(self, X, y) -> Any:
-    #     """
-    #         Wraps a fit method for use in the gridsearch functionality.
+    def fit(self, X, y, device) -> Any:
+        """
+            Wraps a fit method for use in the gridsearch functionality.
 
-    #         @param X: train features
-    #         @param y: train ground truths
+            @param X: train features
+            @param y: train ground truths
             
-    #         @returns reference to self
-    #     """
+            @returns reference to self
+        """
 
-    #     # model.train #
-    #     # setup gradient descent
-    #     self.optimizer = Adam(self.model.parameters(), lr=self.model.learning_rate)
-    #     self.loss_fn = nn.CrossEntropyLoss()
-    #     train_loader = DataLoader(
-    #         TabularDataset(X=self.X_train, y=self.y_train, device=self.device),
-    #         batch_size=self.model.batch_size,
-    #         shuffle=True
-    #     )
+        # model.train #
+        # setup gradient descent
+        self.optimizer = Adam(self.parameters(), lr=self.learning_rate)
+        self.loss_fn = nn.CrossEntropyLoss()
+        train_loader = DataLoader(
+            TabularDataset(X=X, y=y, device=device),
+            batch_size=self.batch_size,
+            shuffle=True
+        )
 
-    #     # fit model & track loss
-    #     for epoch in range(self.model.num_epochs):
-    #         running_loss = 0.0
-    #         for inputs, labels in train_loader:
-    #             # forward pass
-    #             self.optimizer.zero_grad()
-    #             outputs = self.model(inputs)
+        # fit model & track loss
+        for epoch in range(self.num_epochs):
+            running_loss = 0.0
+            for inputs, labels in train_loader:
+                # forward pass
+                self.optimizer.zero_grad()
+                outputs = self.model(inputs)
 
-    #             # loss + backprop
-    #             loss = self.loss_fn(outputs, labels)
-    #             loss.backward()
-    #             self.optimizer.step()
+                # loss + backprop
+                loss = self.loss_fn(outputs, labels)
+                loss.backward()
+                self.optimizer.step()
 
-    #             # track loss
-    #             running_loss += loss.item()
+                # track loss
+                running_loss += loss.item()
 
+    
+    def predict(self, X) -> Any:
+        # gen tensors
+        X = torch.from_numpy(X.to_numpy()).to(self.device)
+
+        # predict without backprop
+        self.model.eval()
+
+        with torch.no_grad():
+            # forward pass
+            outputs = self.model(X)
+
+            # append predictions & the raw prediction value
+            confidence, predictions = torch.max(outputs, 1)
+
+        # wrap predictions
+        return np.array(predictions.cpu()), np.array(confidence.cpu())
+
+
+    def test(self, X, y, device, labels) -> Any:
+        # predict
+        y_pred, y_conf = self.predict(X)
+        y_test = y
+
+        # metrics + report
+        p, r, f, s = precision_recall_fscore_support(
+            y_test,
+            y_pred,
+            labels=labels
+        )
+        a = accuracy_score(y_test, y_pred)
+
+        print("\n<Test Report>")
+        print(f"Precision: [no diabetes] {p[0]}, [pre-diabetes] {p[1]}, [diabetes] {p[2]}")
+        print(f"Recall: [no diabetes] {r[0]}, [pre-diabetes] {r[1]}, [diabetes] {r[2]}")
+        print(f"F1-Score: [no diabetes] {f[0]}, [pre-diabetes] {f[1]}, [diabetes] {f[2]}")
+        print(f"Support: [no diabetes] {s[0]}, [pre-diabetes] {s[1]}, [diabetes] {s[2]}")
+        print(f"Accuracy: {a * 100:.4f}%")
+
+        return a
 
 
 class TabularDataset(Dataset):
@@ -762,30 +803,55 @@ class MLPClassifier:
             }
         
         # conduct search
-        searcher = GridSearchCV(
-            NeuralNetClassifier(
-                LinearNN,
-                **self.hyperparams
-            ),
-            grid_search,
-            scoring="accuracy",
-            refit=True,
-            cv=kfold,
-            verbose=3,
-            n_jobs=-1
-        ).fit(self.X_train, self.y_train)
+        print("<Grid-Search>")
+                ################################################################
+                # DEPRECATED :: may work if we can find a wrapper for sklearn or 
+                #               fix SKORCH wrapper
+                # searcher = GridSearchCV(
+                #     NeuralNetClassifier(
+                #         LinearNN,
+                #         **self.hyperparams
+                #     ),
+                #     grid_search,
+                #     scoring="accuracy",
+                #     refit=True,
+                #     cv=kfold,
+                #     verbose=3,
+                #     n_jobs=-1
+                # ).fit(self.X_train, self.y_train)
 
-        searcher_df = pd.DataFrame.from_dict(searcher.cv_results_)
-        accuracy = searcher.best_score_
-        self.model = searcher.best_estimator_
-        self.hyperparams = searcher.best_params_
+                # searcher_df = pd.DataFrame.from_dict(searcher.cv_results_)
+                # accuracy = searcher.best_score_
+                # self.model = searcher.best_estimator_
+                # self.hyperparams = searcher.best_params_
+                ################################################################
+
+        hyperparam_combos = list(product(grid_search.values()))
+        hyperparam_list = list(grid_search.keys())
+        print(f"Testing {len(hyperparam_combos)} combinations WITHOUT cross-validation")
+
+        max_perf = 0
+        for hyperparam_combo in hyperparam_combos:
+            # unpack
+            hyperparam_combo = {hyperparam_list[i]: hyperparam_combo[i] for i in range(len(hyperparam_list))}
+
+            # train & test
+            cur_model = LinearNN(**hyperparam_combo).to(self.device)
+            cur_model = cur_model.fit(self.X_train, self.y_train, self.device)
+            cur_perf = cur_model.test(self.X_test, self.y_test, self.device)
+
+            # keep best
+            if max_perf < cur_perf:
+                max_perf = cur_perf
+                self.hyperparams = hyperparam_combo
+                self.model = cur_model
 
         print(json.dumps(self.hyperparams, indent=4))
 
         # export params, weights
         if not os.path.exists("../models/grid-searches/"):
             os.makedirs("../models/grid-searches/")
-            searcher_df.to_csv(f"../models/grid-searches/tree-classifier-{datetime.datetime.now().strftime('%m-%d-%y-%H')}.csv", index=False)
+            searcher_df.to_csv(f"../models/grid-searches/ffnn-classifier-{datetime.datetime.now().strftime('%m-%d-%y-%H')}.csv", index=False)
         
         self.test_model()
         self.save_model()
