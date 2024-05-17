@@ -438,9 +438,9 @@ class LinearNN(nn.Module):
         return self
 
     
-    def predict(self, X) -> Any:
+    def predict(self, X, device) -> Any:
         # gen tensors
-        X = torch.from_numpy(X.to_numpy()).to(self.device)
+        X = torch.from_numpy(X.to_numpy()).to(device)
 
         # predict without backprop
         self.eval()
@@ -459,7 +459,7 @@ class LinearNN(nn.Module):
     def test(self, X, y, device) -> Any:
         # predict
         labels = list(sorted(y.unique()))
-        y_pred, y_conf = self.predict(X)
+        y_pred, y_conf = self.predict(X, device)
         y_test = y
 
         # metrics + report
@@ -881,11 +881,12 @@ class MLPClassifier:
                 # self.hyperparams = searcher.best_params_
                 ################################################################
 
-
-        # iterate hidden sizes assuming mirrored options
+        # trackers
         print(f"Testing {len(grid_search['hidden_size']) * len(grid_search['learning_rate']) * len(grid_search['batch_size'])} combinations WITHOUT cross-validation")
         max_perf = -1
+        tracker_df: list[pd.DataFrame] = []
 
+        # iterate hidden sizes assuming mirrored options
         for i, hidden_size in enumerate(grid_search["hidden_size"]):
             # setup
             input_size = grid_search["input_size"][0]
@@ -916,6 +917,14 @@ class MLPClassifier:
                     cur_perf = cur_model.test(self.X_test, self.y_test, self.device)
                     print(f"perf: {cur_perf:.4f}")
 
+                    # tracker report
+                    report_df = pd.DataFrame({
+                        "model-type": "ffnn",
+                        "accuracy": cur_perf,
+                        **hyperparam_combo
+                    })
+                    tracker_df.append(report_df)
+
                     # keep best
                     if max_perf < cur_perf:
                         max_perf = cur_perf
@@ -927,7 +936,9 @@ class MLPClassifier:
         # export params, weights
         if not os.path.exists("../models/grid-searches/"):
             os.makedirs("../models/grid-searches/")
-            searcher_df.to_csv(f"../models/grid-searches/ffnn-classifier-{datetime.datetime.now().strftime('%m-%d-%y-%H')}.csv", index=False)
+        
+        tracker_df = pd.concat(tracker_df, ignore_index=True)
+        tracker_df.to_csv(f"../models/grid-searches/ffnn-classifier-{datetime.datetime.now().strftime('%m-%d-%y-%H')}.csv", index=False)
         
         self.test_model()
         self.save_model()
