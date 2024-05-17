@@ -66,6 +66,7 @@ class TreeClassifier:
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(
             self.data.drop(columns=self.target),
             self.data[self.target],
+            stratify=self.data[self.target],
             test_size=test_prop,
             random_state=42
         )
@@ -528,6 +529,7 @@ class MLPClassifier:
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(
             self.data.drop(columns=self.target),
             self.data[self.target],
+            stratify=self.data[self.target],
             test_size=test_prop,
             random_state=42
         )
@@ -707,6 +709,7 @@ class MLPClassifier:
         # setup gradient descent
         self.optimizer = Adam(self.model.parameters(), lr=self.model.learning_rate)
         self.loss_fn = nn.CrossEntropyLoss()
+        best_loss = float("inf")
         train_loader = DataLoader(
             TabularDataset(X=self.X_train, y=self.y_train, device=self.device),
             batch_size=self.model.batch_size,
@@ -736,8 +739,8 @@ class MLPClassifier:
             self.model.eval()
             with torch.no_grad():
                 test_loss = self.loss_fn(
-                    self.model(self.X_test),
-                    self.y_test
+                    self.model(torch.from_numpy(self.X_test.to_numpy()).to(self.device)),
+                    torch.from_numpy(self.y_test.to_numpy()).to(self.device)
                 )
             train_loss = running_loss / len(train_loader)
 
