@@ -395,7 +395,7 @@ class LinearNN(nn.Module):
             out = layer(out)
             out = self.relu(out)
         out = self.fc_output(out)
-        # out = self.classify_fn(out)
+        out = self.classify_fn(out)
         return out
 
 
@@ -422,10 +422,10 @@ class LinearNN(nn.Module):
         # fit model & track loss
         for epoch in range(self.num_epochs):
             running_loss = 0.0
-            for inputs, labels in train_loader:
+            for inputs, labels in tqdm(train_loader):
                 # forward pass
                 self.optimizer.zero_grad()
-                outputs = self.model(inputs)
+                outputs = self(inputs)
 
                 # loss + backprop
                 loss = self.loss_fn(outputs, labels)
@@ -434,6 +434,8 @@ class LinearNN(nn.Module):
 
                 # track loss
                 running_loss += loss.item()
+        
+        return self
 
     
     def predict(self, X) -> Any:
@@ -441,11 +443,11 @@ class LinearNN(nn.Module):
         X = torch.from_numpy(X.to_numpy()).to(self.device)
 
         # predict without backprop
-        self.model.eval()
+        self.eval()
 
         with torch.no_grad():
             # forward pass
-            outputs = self.model(X)
+            outputs = self(X)
 
             # append predictions & the raw prediction value
             confidence, predictions = torch.max(outputs, 1)
@@ -454,8 +456,9 @@ class LinearNN(nn.Module):
         return np.array(predictions.cpu()), np.array(confidence.cpu())
 
 
-    def test(self, X, y, device, labels) -> Any:
+    def test(self, X, y, device) -> Any:
         # predict
+        labels = list(sorted(y.unique()))
         y_pred, y_conf = self.predict(X)
         y_test = y
 
@@ -836,14 +839,23 @@ class MLPClassifier:
         # setup search
         if grid_search is None:
             grid_search = {
-                "learning_rate": [10 ** (-i) for i in range(5)],
+                "learning_rate": [[0.001], [0.001], [0.001], [0.0005], [0.0005], [0.0005]],
                 "input_size": [self.X_train.shape[1]],
                 "output_size": [self.y_train.nunique()],
-                "hidden_size": [32, 64, 96, 128],
-                "num_hidden": [1, 2, 3],
-                "num_epochs": [10, 25],
-                "batch_size": [32, 64, 128]
+                "hidden_size": [64, 128, 256, 512, 1024, 2048],
+                "num_hidden": [16, 8, 4, 4, 2, 2],
+                "num_epochs": [25, 25, 25, 25, 25, 25],
+                "batch_size": [[128, 256] for _ in range(6)]
             }
+            # grid_search = {
+            #     "learning_rate": [[0.01, 0.001], [0.01, 0.001], [0.001, 0.0005], [0.001, 0.0005], [0.001, 0.0005], [0.001, 0.0005]],
+            #     "input_size": [self.X_train.shape[1]],
+            #     "output_size": [self.y_train.nunique()],
+            #     "hidden_size": [64, 128, 256, 512, 1024, 2048],
+            #     "num_hidden": [16, 8, 4, 4, 2, 2],
+            #     "num_epochs": [25, 25, 25, 25, 25, 25],
+            #     "batch_size": [[32, 64, 128] for _ in range(6)]
+            # }
         
         # conduct search
         print("<Grid-Search>")
@@ -869,25 +881,46 @@ class MLPClassifier:
                 # self.hyperparams = searcher.best_params_
                 ################################################################
 
-        hyperparam_combos = list(product(grid_search.values()))
-        hyperparam_list = list(grid_search.keys())
-        print(f"Testing {len(hyperparam_combos)} combinations WITHOUT cross-validation")
 
-        max_perf = 0
-        for hyperparam_combo in hyperparam_combos:
-            # unpack
-            hyperparam_combo = {hyperparam_list[i]: hyperparam_combo[i] for i in range(len(hyperparam_list))}
+        # iterate hidden sizes assuming mirrored options
+        print(f"Testing {len(grid_search['hidden_size']) * len(grid_search['learning_rate']) * len(grid_search['batch_size'])} combinations WITHOUT cross-validation")
+        max_perf = -1
 
-            # train & test
-            cur_model = LinearNN(**hyperparam_combo).to(self.device)
-            cur_model = cur_model.fit(self.X_train, self.y_train, self.device)
-            cur_perf = cur_model.test(self.X_test, self.y_test, self.device)
+        for i, hidden_size in enumerate(grid_search["hidden_size"]):
+            # setup
+            input_size = grid_search["input_size"][0]
+            output_size = grid_search["output_size"][0]
+            num_hidden = grid_search["num_hidden"][i]
+            num_epochs = grid_search["num_epochs"][i]
 
-            # keep best
-            if max_perf < cur_perf:
-                max_perf = cur_perf
-                self.hyperparams = hyperparam_combo
-                self.model = cur_model
+            # for every hidden size, we'll check learning rates
+            for lr in grid_search["learning_rate"][i]:
+                # for every combo of lr and hidden size, we'll check batch size
+                for bs in grid_search["batch_size"][i]:
+                    # try combo
+                    hyperparam_combo = {
+                        "learning_rate": lr,
+                        "input_size": input_size,
+                        "output_size": output_size,
+                        "hidden_size": hidden_size,
+                        "num_hidden": num_hidden,
+                        "num_epochs": num_epochs,
+                        "batch_size": bs,
+                        "classify_fn": "sigmoid"
+                    }
+
+                    # train & test
+                    print(f"<testing> {hidden_size=}, {lr=}, {bs=}, {num_hidden=}, {num_epochs=}. . . ", end="")
+                    cur_model = LinearNN(**hyperparam_combo).to(self.device)
+                    cur_model = cur_model.fit(self.X_train, self.y_train, self.device)
+                    cur_perf = cur_model.test(self.X_test, self.y_test, self.device)
+                    print(f"perf: {cur_perf:.4f}")
+
+                    # keep best
+                    if max_perf < cur_perf:
+                        max_perf = cur_perf
+                        self.hyperparams = hyperparam_combo
+                        self.model = cur_model            
 
         print(json.dumps(self.hyperparams, indent=4))
 
