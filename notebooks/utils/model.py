@@ -395,7 +395,7 @@ class LinearNN(nn.Module):
             out = layer(out)
             out = self.relu(out)
         out = self.fc_output(out)
-        out = self.classify_fn(out)
+        # out = self.classify_fn(out)
         return out
 
 
@@ -686,7 +686,7 @@ class MLPClassifier:
         
         else:
             # stable sort
-            model_reports.sort_values(by=priority_list, inplace=True, ignore_index=True)
+            model_reports.sort_values(by=priority_list, ascending=False, inplace=True, ignore_index=True)
             path = model_reports["path"][0]
         
         # load model
@@ -773,7 +773,7 @@ class MLPClassifier:
         y_test = self.y_test
 
         # metrics + report
-        labels = self.data[self.target].unique()
+        labels = list(sorted(self.data[self.target].unique()))
         p, r, f, s = precision_recall_fscore_support(
             y_test,
             y_pred,
