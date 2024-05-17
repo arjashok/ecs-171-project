@@ -23,12 +23,14 @@ import pickle
 import json
 import os
 import datetime
+import copy
 from itertools import product
 from dataclasses import dataclass, field
 from typing import Any
 
 from utils.explore_dataset import *
 from utils.transform_dataset import *
+from utils.wrappers import *
 
 
 # Classes
@@ -66,6 +68,11 @@ class TreeClassifier:
             self.data[self.target],
             test_size=test_prop,
             random_state=42
+        )
+
+        # make augmentations
+        self.X_train, self.X_test, self.y_train, self.y_test = post_split_pipeline(
+            self.X_train, self.X_test, self.y_train, self.y_test, self.target, list(set(self.data.columns) - {self.target})
         )
 
         # report
@@ -507,6 +514,7 @@ class MLPClassifier:
     y_test: np.ndarray = field(default=None)                                    # data for training/testing
     score: dict[str, int | float] = field(default=None)                         # scores dict for the accuracy report
 
+
     # internal methods
     def gen_split(self, test_prop: float=0.2) -> None:
         """
@@ -522,6 +530,11 @@ class MLPClassifier:
             self.data[self.target],
             test_size=test_prop,
             random_state=42
+        )
+
+        # make augmentations
+        self.X_train, self.X_test, self.y_train, self.y_test = post_split_pipeline(
+            self.X_train, self.X_test, self.y_train, self.y_test, self.target, list(set(self.data.columns) - {self.target})
         )
 
         # report
@@ -702,7 +715,10 @@ class MLPClassifier:
 
         # fit model & track loss
         for epoch in range(self.model.num_epochs):
+            # setup
             running_loss = 0.0
+            self.model.train()
+
             for inputs, labels in tqdm(train_loader, disable=(verbose < 1)):
                 # forward pass
                 self.optimizer.zero_grad()
@@ -716,9 +732,32 @@ class MLPClassifier:
                 # track loss
                 running_loss += loss.item()
 
+            # validation loss & loss tracking
+            self.model.eval()
+            with torch.no_grad():
+                test_loss = self.loss_fn(
+                    self.model(self.X_test),
+                    self.y_test
+                )
+            train_loss = running_loss / len(train_loader)
+
+            # early stopping
+            if (avg_loss := (test_loss + train_loss) / 2) < best_loss:
+                best_loss = avg_loss
+                best_model_weights = copy.deepcopy(self.model.state_dict())      
+                patience = 10
+            else:
+                # allow for some leeway
+                patience -= 1
+
+                # update model with best weights
+                if patience == 0:
+                    self.model.load_state_dict(best_model_weights)
+                    break
+
             # print stats if wanted
             if verbose > 0:
-                print(f"Epoch {epoch + 1}/{self.model.num_epochs}, Loss: {running_loss / len(train_loader)}")
+                print(f"Epoch {epoch + 1}/{self.model.num_epochs}, Loss: {train_loss:.4f}, Test Loss: {test_loss:.4f}")
 
 
     def test_model(self) -> None:
