@@ -368,6 +368,8 @@ class LinearNN(nn.Module):
         # enforce args
         if isinstance(hidden_size, int):
             hidden_size = [hidden_size] * num_hidden
+        if isinstance(dropout_rate, int):
+            dropout_rate = [dropout_rate] * (num_hidden - 1)
 
         # setup model arch
         super(LinearNN, self).__init__()
@@ -383,7 +385,7 @@ class LinearNN(nn.Module):
                 nn.Linear(hidden_size[i], hidden_size[i + 1])
             )
             self.dropout_layers.append(
-                nn.Dropout(dropout_rate)
+                nn.Dropout(dropout_rate[i])
             )
         
         # output + output functions
@@ -733,8 +735,15 @@ class MLPClassifier:
 
         # setup gradient descent
         self.optimizer = Adam(self.model.parameters(), lr=self.model.learning_rate)
+        if self.scheduler is not None:
+            self.scheduler = {
+                "reduce": torch.optim.lr_scheduler.ReduceLROnPlateau
+            }[self.scheduler](self.optimizer)
+        
         self.loss_fn = nn.CrossEntropyLoss()
+        losses = {k: list() for k in ["train", "test"]}
         best_loss = float("inf")
+        best_epoch = 0
         train_loader = DataLoader(
             TabularDataset(X=self.X_train, y=self.y_train, device=self.device),
             batch_size=self.model.batch_size,
@@ -766,13 +775,17 @@ class MLPClassifier:
                 test_loss = self.loss_fn(
                     self.model(torch.from_numpy(self.X_test.to_numpy()).to(self.device)),
                     torch.from_numpy(self.y_test.to_numpy()).to(self.device)
-                )
+                ).item()
             train_loss = running_loss / len(train_loader)
+
+            losses["train"].append(train_loss)
+            losses["test"].append(test_loss)
 
             # early stopping
             if (avg_loss := (test_loss + train_loss) / 2) < best_loss:
                 best_loss = avg_loss
-                best_model_weights = copy.deepcopy(self.model.state_dict())      
+                best_model_weights = copy.deepcopy(self.model.state_dict())  
+                best_epoch = epoch    
                 patience = 10
             else:
                 # allow for some leeway
@@ -786,6 +799,23 @@ class MLPClassifier:
             # print stats if wanted
             if verbose > 0:
                 print(f"Epoch {epoch + 1}/{self.model.num_epochs}, Loss: {train_loss:.4f}, Test Loss: {test_loss:.4f}")
+
+        # visualization
+        if verbose > 1:
+            # convert tracker to df
+            df = pd.DataFrame(losses)
+            df.index = df.index + 1
+
+            # line plot
+            plt.figure(figsize=(10, 6))
+            sns.lineplot(data=df, x=df.index, y="train", color="lightblue", marker="*", label="train")
+            sns.lineplot(data=df, x=df.index, y="test", color="darkblue", marker="x", label="test")
+            plt.axvline(x=best_epoch, color="darkred", label="chosen-model")
+            plt.xlabel("Epoch")
+            plt.ylabel("Cross-Entropy Loss")
+            plt.legend()
+            plt.title("Loss vs Epochs")
+            plt.show()
 
 
     def test_model(self) -> None:
@@ -978,3 +1008,4 @@ class MLPClassifier:
         
         self.test_model()
         self.save_model()
+
