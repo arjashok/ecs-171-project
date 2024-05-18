@@ -358,20 +358,38 @@ class TreeClassifier:
 
 
 class LinearNN(nn.Module):
-    def __init__(self, input_size, hidden_size, output_size, num_hidden, num_epochs, learning_rate, batch_size, classify_fn):
+    def __init__(self, input_size, hidden_size, output_size, num_hidden, 
+                 num_epochs, learning_rate, batch_size, classify_fn, dropout_rate):
         """
             Initialize model based on hyperparams. This is a normal FFNN with 
             ReLU
         """
         
+        # enforce args
+        if isinstance(hidden_size, int):
+            hidden_size = [hidden_size] * num_hidden
+
         # setup model arch
         super(LinearNN, self).__init__()
-        self.fc_input = nn.Linear(input_size, hidden_size)
-        self.hidden_layers = nn.ModuleList([
-            nn.Linear(hidden_size, hidden_size) for _ in range(num_hidden)
-        ])
-        self.fc_output = nn.Linear(hidden_size, output_size)
-        self.relu = nn.ReLU()
+
+        # input
+        self.fc_input = nn.Linear(input_size, hidden_size[0])
+
+        # hidden + dropout
+        self.hidden_layers = nn.ModuleList()
+        self.dropout_layers = nn.ModuleList()
+        for i in range(num_hidden - 1):
+            self.hidden_layers.append(
+                nn.Linear(hidden_size[i], hidden_size[i + 1])
+            )
+            self.dropout_layers.append(
+                nn.Dropout(dropout_rate)
+            )
+        
+        # output + output functions
+        self.fc_output = nn.Linear(hidden_size[-1], output_size)
+
+        self.relu = nn.functional.relu
         self.classify_fn = nn.Sigmoid() if classify_fn == "sigmoid" else nn.Softmax(dim=1)
 
         # setup params
@@ -391,11 +409,14 @@ class LinearNN(nn.Module):
         # push forward
         out = self.fc_input(x)
         out = self.relu(out)
-        for layer in self.hidden_layers:
-            out = layer(out)
-            out = self.relu(out)
+
+        # apply hidden & dropout
+        for hidden_layer, dropout_layer in zip(self.hidden_layers, self.dropout_layers):
+            out = self.relu(hidden_layer(out))
+            out = dropout_layer(out)
+
         out = self.fc_output(out)
-        out = self.classify_fn(out)
+        # out = self.classify_fn(out)       # avoid using this with CE loss
         return out
 
 
@@ -447,7 +468,7 @@ class LinearNN(nn.Module):
 
         with torch.no_grad():
             # forward pass
-            outputs = self(X)
+            outputs = self.classify_fn(self(X))
 
             # append predictions & the raw prediction value
             confidence, predictions = torch.max(outputs, 1)
@@ -578,6 +599,7 @@ class MLPClassifier:
             "num_epochs": 25,
             "batch_size": 32,
             "learning_rate": 0.01,
+            "dropout_rate": 0.3,
             "classify_fn": "sigmoid"
         }
 
@@ -805,6 +827,9 @@ class MLPClassifier:
             @param X: data to predict on
         """
 
+        # wrap
+        return self.model.predict(X, self.device)
+
         # gen tensors
         X = torch.from_numpy(X.to_numpy()).to(self.device)
 
@@ -813,7 +838,7 @@ class MLPClassifier:
 
         with torch.no_grad():
             # forward pass
-            outputs = self.model(X)
+            outputs = self.model.classify_fn(self.model(X))
 
             # append predictions & the raw prediction value
             confidence, predictions = torch.max(outputs, 1)
@@ -845,7 +870,8 @@ class MLPClassifier:
                 "hidden_size": [64, 128, 256, 512, 1024, 2048],
                 "num_hidden": [16, 8, 4, 4, 2, 2],
                 "num_epochs": [25, 25, 25, 25, 25, 25],
-                "batch_size": [[64, 128, 256, 512] for _ in range(6)]
+                "dropout_rate": [[0.25, 0.5] * 6],
+                "batch_size": [[128, 256, 512] * len(6)]
             }
             # grid_search = {
             #     "learning_rate": [[0.01, 0.001], [0.01, 0.001], [0.001, 0.0005], [0.001, 0.0005], [0.001, 0.0005], [0.001, 0.0005]],
@@ -885,6 +911,7 @@ class MLPClassifier:
         num_hidden = len(grid_search["hidden_size"])
         num_lr = [len(k) for k in grid_search["learning_rate"]]
         num_bs = [len(k) for k in grid_search["batch_size"]]
+        num_dr = [len(k) for k in grid_search["dropout_rate"]]
         num_combos = sum(lr * bs for lr, bs in zip(num_lr, num_bs))
         print(f"Testing {num_combos} combinations WITHOUT cross-validation")
 
@@ -903,39 +930,42 @@ class MLPClassifier:
             for lr in grid_search["learning_rate"][i]:
                 # for every combo of lr and hidden size, we'll check batch size
                 for bs in grid_search["batch_size"][i]:
-                    # try combo
-                    hyperparam_combo = {
-                        "learning_rate": lr,
-                        "input_size": input_size,
-                        "output_size": output_size,
-                        "hidden_size": hidden_size,
-                        "num_hidden": num_hidden,
-                        "num_epochs": num_epochs,
-                        "batch_size": bs,
-                        "classify_fn": "sigmoid"
-                    }
+                    # for every combo of lr, hs, bs, and dropout rate
+                    for dr in grid_search["dropout_rate"][i]:
+                        # try combo
+                        hyperparam_combo = {
+                            "learning_rate": lr,
+                            "input_size": input_size,
+                            "output_size": output_size,
+                            "hidden_size": hidden_size,
+                            "num_hidden": num_hidden,
+                            "num_epochs": num_epochs,
+                            "batch_size": bs,
+                            "dropout_rate": dr,
+                            "classify_fn": "sigmoid"
+                        }
 
-                    # train & test
-                    print(f"\n\n<Trying Model Architecture> {hidden_size=}, {lr=}, {bs=}, {num_hidden=}, {num_epochs=}. . . ", end="")
-                    cur_model = LinearNN(**hyperparam_combo).to(self.device)
-                    cur_model = cur_model.fit(self.X_train, self.y_train, self.device)
-                    cur_perf = cur_model.test(self.X_test, self.y_test, self.device)
-                    print(f"perf: {cur_perf:.4f}")
+                        # train & test
+                        print(f"\n\n<Trying Model Architecture> {hidden_size=}, {lr=}, {bs=}, {dr=}, {num_hidden=}, {num_epochs=}. . . ", end="")
+                        cur_model = LinearNN(**hyperparam_combo).to(self.device)
+                        cur_model = cur_model.fit(self.X_train, self.y_train, self.device)
+                        cur_perf = cur_model.test(self.X_test, self.y_test, self.device)
+                        print(f"perf: {cur_perf:.4f}")
 
-                    # tracker report
-                    report_df = {
-                        "model-type": "ffnn",
-                        "accuracy": cur_perf,
-                        **hyperparam_combo
-                    }
-                    report_df = pd.DataFrame({k: [v] for k, v in report_df.items()})
-                    tracker_df.append(report_df)
+                        # tracker report
+                        report_df = {
+                            "model-type": "ffnn",
+                            "accuracy": cur_perf,
+                            **hyperparam_combo
+                        }
+                        report_df = pd.DataFrame({k: [v] for k, v in report_df.items()})
+                        tracker_df.append(report_df)
 
-                    # keep best
-                    if max_perf < cur_perf:
-                        max_perf = cur_perf
-                        self.hyperparams = hyperparam_combo
-                        self.model = cur_model            
+                        # keep best
+                        if max_perf < cur_perf:
+                            max_perf = cur_perf
+                            self.hyperparams = hyperparam_combo
+                            self.model = cur_model            
 
         print(json.dumps(self.hyperparams, indent=4))
 
