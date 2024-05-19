@@ -14,6 +14,7 @@ from tqdm import tqdm
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.preprocessing import StandardScaler
 from sklearn.utils import resample
+from imblearn.over_sampling import SMOTENC
 
 
 # Superficial Utility
@@ -102,7 +103,7 @@ def normalize_features(df: pd.DataFrame, features: list[str], how: str="zscore",
 
 
 # Feature-Engineering
-def up_sampling(df: pd.DataFrame, target: str) -> None | pd.DataFrame:
+def up_sampling(df: pd.DataFrame, target: str, categorical_features: list[str]=None) -> None | pd.DataFrame:
     """
         Upsamples to balance the data within a range of tolerance.
         Cannot be inplace because you can't replace an existing df with a concatenation.
@@ -126,5 +127,15 @@ def up_sampling(df: pd.DataFrame, target: str) -> None | pd.DataFrame:
     
     # Creating a new DataFrame by concatenating the upsampled groups
     df_new = pd.concat(list(resampled_data.values()), ignore_index=True) # cannot use original df here
+
+    # # SMOTE
+    # if categorical_features is None:
+    #     categorical_features = "auto"
+    
+    # sm = SMOTENC(random_state=42, categorical_features=categorical_features)
+    # X_res, y_res = sm.fit_resample(df.drop(columns=target), df[target])
+    # df_new = pd.concat([X_res, y_res], axis=1)
+
+    # print(dict(y_res.value_counts()))
 
     return df_new

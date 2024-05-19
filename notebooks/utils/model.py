@@ -237,13 +237,33 @@ class TreeClassifier:
         return True
 
 
-    def train_model(self) -> None:
+    def train_model(self, verbose: int=2, **kwargs) -> None:
         """
             Trains the model, assuming no hyperparameter optimization.
         """
 
         # fit model
-        self.model.fit(self.X_train, self.y_train)
+        self.model = self.model.fit(self.X_train.values, self.y_train.values)
+
+        # plotting
+        if verbose > 1:
+            # convert tracker to df
+            train_loss = self.model.train_score_
+
+            df = pd.DataFrame({
+                "train": train_loss,
+            })
+            df.index = df.index + 1
+
+            # line plot
+            plt.figure(figsize=(10, 6))
+            sns.lineplot(data=df, x=df.index, y="train", color="lightblue", marker="*", label="train")
+            plt.xlabel("Epoch")
+            plt.ylabel(f"{self.hyperparams['loss'].capitalize()} Loss")
+            plt.legend()
+            plt.ylim((0, 1))
+            plt.title("Loss vs Epochs")
+            plt.show()
 
 
     def test_model(self) -> None:
@@ -252,7 +272,7 @@ class TreeClassifier:
         """
 
         # predict
-        y_pred = self.predict(self.X_test)
+        y_pred = self.predict(self.X_test.values)
         y_test = self.y_test
 
         # metrics + report
@@ -368,7 +388,7 @@ class LinearNN(nn.Module):
         # enforce args
         if isinstance(hidden_size, int):
             hidden_size = [hidden_size] * num_hidden
-        if isinstance(dropout_rate, int):
+        if isinstance(dropout_rate, float):
             dropout_rate = [dropout_rate] * (num_hidden - 1)
 
         # setup model arch
@@ -533,6 +553,7 @@ class MLPClassifier:
     device: Any = field(
         default_factory=lambda: torch.device("cuda" if torch.cuda.is_available else "cpu")
     )                                                                           # device to use; tries for GPU optimization
+    scheduler: Any = field(default=None)                                        # learning rate scheduler
 
     # calculated members
     X_train: np.ndarray = field(default=None)                                   # data for training/testing
@@ -782,8 +803,9 @@ class MLPClassifier:
             losses["test"].append(test_loss)
 
             # early stopping
-            if (avg_loss := (test_loss + train_loss) / 2) < best_loss:
-                best_loss = avg_loss
+            avg_loss = ((test_loss + train_loss) / 2)
+            if avg_loss < best_loss:
+                best_loss = ((test_loss + train_loss) / 2)
                 best_model_weights = copy.deepcopy(self.model.state_dict())  
                 best_epoch = epoch    
                 patience = 10
@@ -810,10 +832,11 @@ class MLPClassifier:
             plt.figure(figsize=(10, 6))
             sns.lineplot(data=df, x=df.index, y="train", color="lightblue", marker="*", label="train")
             sns.lineplot(data=df, x=df.index, y="test", color="darkblue", marker="x", label="test")
-            plt.axvline(x=best_epoch, color="darkred", label="chosen-model")
+            plt.axvline(x=best_epoch + 1, color="darkred", label="chosen-model")
             plt.xlabel("Epoch")
             plt.ylabel("Cross-Entropy Loss")
             plt.legend()
+            plt.ylim(bottom=0)
             plt.title("Loss vs Epochs")
             plt.show()
 

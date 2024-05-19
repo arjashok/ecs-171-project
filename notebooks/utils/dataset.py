@@ -31,7 +31,10 @@ class Dataset:
 
     # internal methods
     def __post_init__(self):
-        self.data = pd.read_csv(self.path, engine="c")
+        if "parquet" in self.path:
+            self.data = pd.read_parquet(self.path)
+        else:
+            self.data = pd.read_csv(self.path, engine="c")
 
 
     # external methods
