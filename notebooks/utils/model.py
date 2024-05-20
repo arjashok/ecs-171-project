@@ -1086,15 +1086,18 @@ class LogClassifier:
         self.data = pd.read_parquet(self.path)
         self.gen_split()
 
+        # model
+        self.model = LogisticRegression()
+
 
     # External Methods
     def train_model(self, verbose: int=0) -> None:
         """
             Trains the model using logistic regression
         """
-        self.model = LogisticRegression()
-        self.model.fit(self.X_train, self.y_train)
-
+        
+        # train
+        self.model.fit(self.X_train.values, self.y_train.values)
 
 
     def test_model(self) -> None:
@@ -1103,15 +1106,29 @@ class LogClassifier:
         """
 
         # predict
-        y_pred, y_conf = self.predict(self.X_test)
+        y_pred = self.predict(self.X_test.values)
         y_test = self.y_test
 
         # metrics + report
+        labels = self.data[self.target].unique()
+        p, r, f, s = precision_recall_fscore_support(
+            y_test,
+            y_pred,
+            labels=labels
+        )
         a = accuracy_score(y_test, y_pred)
 
         print("\n<Test Report>")
+        print(f"Precision: [no diabetes] {p[0]}, [pre-diabetes] {p[1]}, [diabetes] {p[2]}")
+        print(f"Recall: [no diabetes] {r[0]}, [pre-diabetes] {r[1]}, [diabetes] {r[2]}")
+        print(f"F1-Score: [no diabetes] {f[0]}, [pre-diabetes] {f[1]}, [diabetes] {f[2]}")
+        print(f"Support: [no diabetes] {s[0]}, [pre-diabetes] {s[1]}, [diabetes] {s[2]}")
         print(f"Accuracy: {a * 100:.4f}%")
-        self.score = {'accuracy': a}
+
+        # export weights
+        self.score = [{"label": label, "precision": p[label], "recall": r[label], \
+                       "f1-score": f[label], "support": s[label], "accuracy": a * 100} \
+                        for label in labels]
 
 
     def predict(self, X: np.ndarray) -> tuple[np.array, np.array]:
@@ -1122,8 +1139,5 @@ class LogClassifier:
         """
 
         # wrap
-        return self.model.predict(X, self.device)
-
-
-
+        return self.model.predict(X)
 
