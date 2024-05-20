@@ -18,6 +18,7 @@ from tqdm import tqdm
 from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.model_selection import GridSearchCV, train_test_split
 from sklearn.metrics import precision_recall_fscore_support, accuracy_score
+from sklearn.linear_model import LogisticRegression
 
 import pickle
 import json
@@ -1031,4 +1032,98 @@ class MLPClassifier:
         
         self.test_model()
         self.save_model()
+
+
+@dataclass(slots=True)
+class LogClassifier:
+    # user-set members
+    target: str = field()                                                       # target feature
+    path: str = field()                                                         # dataset path
+
+    # inferred members
+    data: pd.DataFrame = field(default=None)                                    # dataset
+    model: LogisticRegression = field(default=None)                             # underlying model
+    model_lookup_path: str = field(default="../models/model_lookup.csv")        # model lookup
+
+    # calculated members
+    X_train: np.ndarray = field(default=None)                                   # data for training/testing
+    y_train: np.ndarray = field(default=None)                                   # data for training/testing
+    X_test: np.ndarray = field(default=None)                                    # data for training/testing
+    y_test: np.ndarray = field(default=None)                                    # data for training/testing
+    score: dict[str, int | float] = field(default=None)                         # scores dict for the accuracy report
+
+    # internal methods
+    def gen_split(self, test_prop: float=0.2) -> None:
+        """
+            Generates train/test split and a report along with it
+            
+            @param test_prop: proportion of dataset to reserve for testing
+            @param stratify: whether to stratify or not
+        """
+
+        # split
+        self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(
+            self.data.drop(columns=self.target),
+            self.data[self.target],
+            stratify=self.data[self.target],
+            test_size=test_prop,
+            random_state=42
+        )
+
+        # make augmentations
+        self.X_train, self.X_test, self.y_train, self.y_test = post_split_pipeline(
+            self.X_train, self.X_test, self.y_train, self.y_test, self.target, list(set(self.data.columns) - {self.target})
+        )
+
+        # report
+        print("<Train-Test Split Report>")
+        print(f"Train: {len(self.y_train)} obs, {(self.y_train == 0).sum()} no diabetes [0], {(self.y_train == 1).sum()} pre-diabetes [1], {(self.y_train == 2).sum()} diabetes [2]")
+        print(f"Test: {len(self.y_test)} obs, {(self.y_test == 0).sum()} no diabetes [0], {(self.y_test == 1).sum()} pre-diabetes [1], {(self.y_test == 2).sum()} diabetes [2]")
+
+
+    def __post_init__(self):
+        # data
+        self.data = pd.read_parquet(self.path)
+        self.gen_split()
+
+
+    # External Methods
+    def train_model(self, verbose: int=0) -> None:
+        """
+            Trains the model using logistic regression
+        """
+        self.model = LogisticRegression()
+        self.model.fit(self.X_train, self.y_train)
+
+
+
+    def test_model(self) -> None:
+        """
+            Generates test error.
+        """
+
+        # predict
+        y_pred, y_conf = self.predict(self.X_test)
+        y_test = self.y_test
+
+        # metrics + report
+        a = accuracy_score(y_test, y_pred)
+
+        print("\n<Test Report>")
+        print(f"Accuracy: {a * 100:.4f}%")
+        self.score = {'accuracy': a}
+
+
+    def predict(self, X: np.ndarray) -> tuple[np.array, np.array]:
+        """
+            Generates predictions for use in the test data.
+
+            @param X: data to predict on
+        """
+
+        # wrap
+        return self.model.predict(X, self.device)
+
+
+
 
