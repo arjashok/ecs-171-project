@@ -258,11 +258,11 @@ class TreeClassifier:
 
             # line plot
             plt.figure(figsize=(10, 6))
-            sns.lineplot(data=df, x=df.index, y="train", color="lightblue", marker="*", label="train")
+            sns.lineplot(data=df, x=df.index, y="train", color="darkred", marker="*", label="train")
             plt.xlabel("Epoch")
             plt.ylabel(f"{self.hyperparams['loss'].capitalize()} Loss")
             plt.legend()
-            plt.ylim((0, 1))
+            plt.ylim(bottom=0)
             plt.title("Loss vs Epochs")
             plt.show()
 
@@ -291,6 +291,7 @@ class TreeClassifier:
         print(f"F1-Score: [no diabetes] {f[0]}, [pre-diabetes] {f[1]}, [diabetes] {f[2]}")
         print(f"Support: [no diabetes] {s[0]}, [pre-diabetes] {s[1]}, [diabetes] {s[2]}")
         print(f"Accuracy: {a * 100:.4f}%")
+        print(f"Macro-F1: {np.mean(f):.4f}")
 
         # export weights
         self.score = [{"label": label, "precision": p[label], "recall": r[label], \
@@ -831,7 +832,7 @@ class MLPClassifier:
 
             # line plot
             plt.figure(figsize=(10, 6))
-            sns.lineplot(data=df, x=df.index, y="train", color="lightblue", marker="*", label="train")
+            sns.lineplot(data=df, x=df.index, y="train", color="darkred", marker="*", label="train")
             sns.lineplot(data=df, x=df.index, y="test", color="darkblue", marker="x", label="test")
             plt.axvline(x=best_epoch + 1, color="darkred", label="chosen-model")
             plt.xlabel("Epoch")
@@ -866,6 +867,7 @@ class MLPClassifier:
         print(f"F1-Score: [no diabetes] {f[0]}, [pre-diabetes] {f[1]}, [diabetes] {f[2]}")
         print(f"Support: [no diabetes] {s[0]}, [pre-diabetes] {s[1]}, [diabetes] {s[2]}")
         print(f"Accuracy: {a * 100:.4f}%")
+        print(f"Macro-F1: {np.mean(f):.4f}")
 
         # export weights
         self.score = [{"label": label, "precision": p[label], "recall": r[label], \
@@ -1091,6 +1093,17 @@ class LogClassifier:
 
 
     # External Methods
+    def load_model(self) -> bool:
+        """
+            Loads the model, i.e. just trains since it's as efficient as 
+            loading.
+        """
+
+        # wrap train
+        self.train_model(verbose=2)
+        return True
+
+
     def train_model(self, verbose: int=0) -> None:
         """
             Trains the model using logistic regression
@@ -1124,6 +1137,7 @@ class LogClassifier:
         print(f"F1-Score: [no diabetes] {f[0]}, [pre-diabetes] {f[1]}, [diabetes] {f[2]}")
         print(f"Support: [no diabetes] {s[0]}, [pre-diabetes] {s[1]}, [diabetes] {s[2]}")
         print(f"Accuracy: {a * 100:.4f}%")
+        print(f"Macro-F1: {np.mean(f):.4f}")
 
         # export weights
         self.score = [{"label": label, "precision": p[label], "recall": r[label], \

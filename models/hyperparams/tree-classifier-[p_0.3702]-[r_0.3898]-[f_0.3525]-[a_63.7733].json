@@ -1,0 +1,12 @@
+{
+    "loss": "log_loss",
+    "learning_rate": 0.0001,
+    "n_estimators": 1000,
+    "criterion": "friedman_mse",
+    "min_samples_split": 2,
+    "min_samples_leaf": 5,
+    "max_depth": 3,
+    "n_iter_no_change": 5,
+    "max_features": "sqrt",
+    "tol": 0.0001
+}
