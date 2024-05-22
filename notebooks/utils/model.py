@@ -743,10 +743,14 @@ class MLPClassifier:
         if path is None:
             return False
         
+        # print(json.dumps(self.hyperparams, indent=4))
+        # self.model = None
         self.model = LinearNN(**self.hyperparams).to(self.device)
         self.model.load_state_dict(torch.load(f"../models/weights/{path}.pt"))
         self.model.eval()
-        self.hyperparams = json.load(open(f"../models/hyperparams/{path}.json", "r"))
+        self.set_hyperparams(
+            json.load(open(f"../models/hyperparams/{path}.json", "r"))
+        )
 
         return True
 
