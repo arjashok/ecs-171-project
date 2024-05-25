@@ -41,7 +41,7 @@ def post_split_pipeline(X_train: pd.DataFrame, X_test: pd.DataFrame,
     # normalize & upsample train
     X_train = normalize_features(X_train, features=features)
     train_data = pd.concat([X_train, y_train], axis=1)
-    train_data = up_sampling(train_data, target=target, categorical_features=categorical_features)
+    # train_data = up_sampling(train_data, target=target, categorical_features=categorical_features)
 
     # normalize test
     X_test = normalize_features(X_test, features=features)

@@ -381,7 +381,7 @@ class TreeClassifier:
 
 class LinearNN(nn.Module):
     def __init__(self, input_size, hidden_size, output_size, num_hidden, 
-                 num_epochs, learning_rate, batch_size, classify_fn, dropout_rate):
+                 num_epochs, learning_rate, batch_size, classify_fn="sigmoid", dropout_rate=0.3):
         """
             Initialize model based on hyperparams. This is a normal FFNN with 
             ReLU
@@ -405,6 +405,9 @@ class LinearNN(nn.Module):
         for i in range(num_hidden - 1):
             self.hidden_layers.append(
                 nn.Linear(hidden_size[i], hidden_size[i + 1])
+            )
+            self.hidden_layers.append(
+                nn.BatchNorm1d(hidden_size[i + 1])
             )
             self.dropout_layers.append(
                 nn.Dropout(dropout_rate[i])
@@ -743,8 +746,8 @@ class MLPClassifier:
         if path is None:
             return False
         
-        # print(json.dumps(self.hyperparams, indent=4))
-        # self.model = None
+        print(self.hyperparams)
+        print(path)
         self.model = LinearNN(**self.hyperparams).to(self.device)
         self.model.load_state_dict(torch.load(f"../models/weights/{path}.pt"))
         self.model.eval()
