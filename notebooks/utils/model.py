@@ -226,7 +226,7 @@ class TreeClassifier:
         
         else:
             # stable sort
-            model_reports.sort_values(by=priority_list, inplace=True)
+            model_reports.sort_values(by=priority_list, inplace=True, ascending=False, ignore_index=True)
             path = model_reports["path"][0]
         
         # load model
@@ -746,14 +746,12 @@ class MLPClassifier:
         if path is None:
             return False
         
-        print(self.hyperparams)
-        print(path)
-        self.model = LinearNN(**self.hyperparams).to(self.device)
-        self.model.load_state_dict(torch.load(f"../models/weights/{path}.pt"))
-        self.model.eval()
         self.set_hyperparams(
             json.load(open(f"../models/hyperparams/{path}.json", "r"))
         )
+        self.model = LinearNN(**self.hyperparams).to(self.device)
+        self.model.load_state_dict(torch.load(f"../models/weights/{path}.pt"))
+        self.model.eval()
 
         return True
 
