@@ -14,7 +14,7 @@ from tqdm import tqdm
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.preprocessing import StandardScaler
 from sklearn.utils import resample
-from imblearn.over_sampling import SMOTENC
+from imblearn.over_sampling import SMOTE
 
 
 # Superficial Utility
@@ -114,28 +114,26 @@ def up_sampling(df: pd.DataFrame, target: str, categorical_features: list[str]=N
         @return A DataFrame where the classes in the target variable are balanced through up-sampling.
     """
 
-    max_size = df[target].value_counts().max()
+    # max_size = df[target].value_counts().max()
     
-    # A dictionary to temporarily store the upsampled data frames
-    resampled_data = {}
+    # # A dictionary to temporarily store the upsampled data frames
+    # resampled_data = {}
 
-    for class_index, group in df.groupby(target):
-        resampled_data[class_index] = resample(group,
-                                               replace=True,            # Sample with replacement
-                                               n_samples=max_size,      # Match number in majority class
-                                               random_state=42)
+    # for class_index, group in df.groupby(target):
+    #     resampled_data[class_index] = resample(group,
+    #                                            replace=True,            # Sample with replacement
+    #                                            n_samples=max_size,      # Match number in majority class
+    #                                            random_state=42)
     
-    # Creating a new DataFrame by concatenating the upsampled groups
-    df_new = pd.concat(list(resampled_data.values()), ignore_index=True) # cannot use original df here
+    # # Creating a new DataFrame by concatenating the upsampled groups
+    # df_new = pd.concat(list(resampled_data.values()), ignore_index=True) # cannot use original df here
 
-    # # SMOTE
-    # if categorical_features is None:
-    #     categorical_features = "auto"
+    # SMOTE
+    if categorical_features is None:
+        categorical_features = "auto"
     
-    # sm = SMOTENC(random_state=42, categorical_features=categorical_features)
-    # X_res, y_res = sm.fit_resample(df.drop(columns=target), df[target])
-    # df_new = pd.concat([X_res, y_res], axis=1)
-
-    # print(dict(y_res.value_counts()))
+    sm = SMOTE(random_state=42)
+    X_res, y_res = sm.fit_resample(df.drop(columns=target), df[target])
+    df_new = pd.concat([X_res, y_res], axis=1)
 
     return df_new
