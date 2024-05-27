@@ -293,6 +293,25 @@ class TreeClassifier:
         print(f"Accuracy: {a * 100:.4f}%")
         print(f"Macro-F1: {np.mean(f):.4f}")
 
+        # Predicting probabilies for ROC
+        y_pred_proba = self.predict_proba(self.X_test.values)
+
+        # Calculate ROC curve and AUC for each class
+        for i, label in enumerate(labels):
+            fpr, tpr, _ = roc_curve(y_test == label, y_pred_proba[:, i])
+            roc_auc = auc(fpr, tpr)
+            plt.plot(fpr, tpr, label=f'ROC curve for {label} (area = {roc_auc:0.2f})')
+
+        # Plot ROC curve
+        plt.plot([0, 1], [0, 1], 'k--')
+        plt.xlim([0.0, 1.0])
+        plt.ylim([0.0, 1.05])
+        plt.xlabel('False Positive Rate')
+        plt.ylabel('True Positive Rate')
+        plt.title('Receiver Operating Characteristic (ROC) Curve')
+        plt.legend(loc="lower right")
+        plt.show()
+
         # export weights
         self.score = [{"label": label, "precision": p[label], "recall": r[label], \
                        "f1-score": f[label], "support": s[label], "accuracy": a * 100} \
@@ -309,6 +328,17 @@ class TreeClassifier:
 
         # wrap predictions
         return self.model.predict(X)
+    
+    
+    def predict_proba(self, X: np.ndarray) -> np.ndarray:
+        """
+            Generates prediction probabilities for the test data.
+            
+            @param X: data to predict on
+        """
+
+        # wrap predictions
+        return self.model.predict_proba(X)
 
 
     def optimize_hyperparams(self, grid_search: dict[str, list[int | float | str]]=None,
@@ -874,6 +904,25 @@ class MLPClassifier:
         print(f"Accuracy: {a * 100:.4f}%")
         print(f"Macro-F1: {np.mean(f):.4f}")
 
+        # Predicting probabilies for ROC
+        y_pred_proba = self.predict_proba(self.X_test.values)
+        
+        # Calculate ROC curve and AUC for each class
+        for i, label in enumerate(labels):
+            fpr, tpr, _ = roc_curve(y_test == label, y_pred_proba[:, i])
+            roc_auc = auc(fpr, tpr)
+            plt.plot(fpr, tpr, label=f'ROC curve for {label} (area = {roc_auc:0.2f})')
+
+        # Plot ROC curve
+        plt.plot([0, 1], [0, 1], 'k--')
+        plt.xlim([0.0, 1.0])
+        plt.ylim([0.0, 1.05])
+        plt.xlabel('False Positive Rate')
+        plt.ylabel('True Positive Rate')
+        plt.title('Receiver Operating Characteristic (ROC) Curve')
+        plt.legend(loc="lower right")
+        plt.show()
+
         # export weights
         self.score = [{"label": label, "precision": p[label], "recall": r[label], \
                        "f1-score": f[label], "support": s[label], "accuracy": a * 100} \
@@ -906,6 +955,24 @@ class MLPClassifier:
 
         # wrap predictions
         return np.array(predictions.cpu()), np.array(confidence.cpu())
+    
+    def predict_proba(self, X: np.ndarray) -> np.ndarray:
+        """
+            Generates prediction probabilities for the test data.
+            No builtin function from scikit learn to wrap, so doing this manually.
+            
+            @param X: data to predict on
+        """
+        # Convert to tensor
+        X = torch.from_numpy(X).to(self.device)
+
+        # predict without backprop
+        self.model.eval()
+        with torch.no_grad():
+            # forward pass
+            outputs = self.model.classify_fn(self.model(X))
+
+        return outputs.cpu().numpy()
 
 
     def optimize_hyperparams(self, grid_search: dict[str, list[int | float | str]]=None,
@@ -1144,6 +1211,25 @@ class LogClassifier:
         print(f"Accuracy: {a * 100:.4f}%")
         print(f"Macro-F1: {np.mean(f):.4f}")
 
+        # Predicting probabilies for ROC
+        y_pred_proba = self.predict_proba(self.X_test.values)
+        
+        # Calculate ROC curve and AUC for each class
+        for i, label in enumerate(labels):
+            fpr, tpr, _ = roc_curve(y_test == label, y_pred_proba[:, i])
+            roc_auc = auc(fpr, tpr)
+            plt.plot(fpr, tpr, label=f'ROC curve for {label} (area = {roc_auc:0.2f})')
+
+        # Plot ROC curve
+        plt.plot([0, 1], [0, 1], 'k--')
+        plt.xlim([0.0, 1.0])
+        plt.ylim([0.0, 1.05])
+        plt.xlabel('False Positive Rate')
+        plt.ylabel('True Positive Rate')
+        plt.title('Receiver Operating Characteristic (ROC) Curve')
+        plt.legend(loc="lower right")
+        plt.show()
+
         # export weights
         self.score = [{"label": label, "precision": p[label], "recall": r[label], \
                        "f1-score": f[label], "support": s[label], "accuracy": a * 100} \
@@ -1159,4 +1245,14 @@ class LogClassifier:
 
         # wrap
         return self.model.predict(X)
+    
+    def predict_proba(self, X: np.ndarray) -> np.ndarray:
+        """
+            Generates prediction probabilities for the test data.
+            
+            @param X: data to predict on
+        """
+
+        # wrap predictions
+        return self.model.predict_proba(X)
 
