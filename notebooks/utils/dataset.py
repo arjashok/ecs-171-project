@@ -21,7 +21,7 @@ class Dataset:
     # user-set members
     path: str = field()                                                         # path to dataset
     target: str = field(default=None)                                           # target variable (column name)
-    feature_set: list[str] = field(init=False)                                  # defaults to all but target
+    feature_set: list[str] = field(init=None)                                   # defaults to all but target
 
     # inferred members
     data: pd.DataFrame = field(default=None)                                    # dataset
@@ -35,6 +35,10 @@ class Dataset:
             self.data = pd.read_parquet(self.path)
         else:
             self.data = pd.read_csv(self.path, engine="c")
+
+        if self.target is not None:
+            self.feature_set = list(self.data.columns)
+            self.feature_set.remove(self.target)
 
 
     # external methods
