@@ -1,7 +1,8 @@
 #helper function, corrects/validates inputs passed in
 def input_validation(input_dict):
     def binary(input_dict, key):
-        return(input_dict[key] == 0 or input_dict[key] == 1)
+        value = int(input_dict[key])
+        return(value == 0 or value == 1)
 
     #if passed in as floats, truncate all categorical inputs to ints. 
     input_dict['general_health'] = int(input_dict['general_health'])
@@ -156,7 +157,7 @@ def input_validation(input_dict):
     if (not binary(input_dict, 'chol_check')):
         return None
         
-    if(not (input_dict['bmi'] <= 100 and input_dict['bmi'] >= 0)):
+    if(not (int(input_dict['bmi']) <= 100 and int(input_dict['bmi']) >= 0)):
         return None
         
     if(not binary(input_dict, 'smoker')):
@@ -187,14 +188,14 @@ def input_validation(input_dict):
         return None
 
 
-    if(not (input_dict['general_health'] >=1 and input_dict['general_health'] <= 5)):
+    if(not (int(input_dict['general_health']) >=1 and int(input_dict['general_health']) <= 5)):
         #checks for integer between 1 and 5 for the 5 categories. 
         return None
   
-    if(not (input_dict['mental_health'] >=0 and input_dict['mental_health'] <= 30)):
+    if(not (int(input_dict['mental_health']) >=0 and int(input_dict['mental_health']) <= 30)):
         return None
  
-    if(not (input_dict['physical_health'] >=0 and input_dict['physical_health'] <= 30)):
+    if(not (int(input_dict['physical_health']) >=0 and int(input_dict['physical_health']) <= 30)):
         return None
         
     if(not binary(input_dict, 'diff_walk')):
@@ -203,13 +204,13 @@ def input_validation(input_dict):
     if(not binary(input_dict, 'sex')):
         return None
         
-    if(not (input_dict['age'] >= 0 and input_dict['age'] <= 13)):
+    if(not (int(input_dict['age']) >= 0 and int(input_dict['age'] <= 13))):
         return None
     
-    if(not (input_dict['education'] >= 1 and input_dict['education'] <= 6)):
+    if(not (int(input_dict['education'] >= 1) and int(input_dict['education']) <= 6)):
         return None   
         
-    if(not (input_dict['income'] >= 1 and input_dict['income'] <= 8)):
+    if(not (int(input_dict['income']) >= 1 and int(input_dict['income']) <= 8)):
         return None
 
     return input_dict

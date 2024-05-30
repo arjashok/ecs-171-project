@@ -3,6 +3,32 @@ from flask_cors import CORS, cross_origin
 import numpy as np
 import inputvalidation as iv
 
+
+
+test_data = {
+  "high_bp": "1",
+  "high_chol": "1",
+  "chol_check": "1",
+  "bmi": "25",
+  "smoker": "0",
+  "stroke": "0",
+  "heart_disease": "0",
+  "physical_activity": "1",
+  "fruits": "1",
+  "veggies": "1",
+  "heavy_drinker": "0",
+  "no_doc_bc_cost": "0",
+  "general_health": "3",
+  "mental_health": "5",
+  "physical_health": "5",
+  "diff_walk": "0",
+  "sex": "1",
+  "age": "30",
+  "education": "4",
+  "income": "5"
+}
+
+
 app = Flask(__name__)
 cors = CORS(app, resources={r"/model/*": {"origins": "http://localhost:3000"}})
 
