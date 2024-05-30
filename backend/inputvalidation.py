@@ -1,7 +1,7 @@
 #helper function, corrects/validates inputs passed in
 def input_validation(input_dict):
     def binary(input_dict, key):
-        return(input[key] == 0 or input[key] == 1)
+        return(input_dict[key] == 0 or input_dict[key] == 1)
 
     #if passed in as floats, truncate all categorical inputs to ints. 
     input_dict['general_health'] = int(input_dict['general_health'])
