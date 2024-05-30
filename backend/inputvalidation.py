@@ -18,7 +18,7 @@ def input_validation(input_dict):
     #5 = College 1 year to 3 years (Some college or technical school) 
     #6 = College 4 years or more (College graduate)
     
-    edu_level = lower(input_dict['education'])
+    edu_level = input_dict['education'].lower()
     if(edu_level == 'kindergarten' or edu_level == 'never'):
         input_dict['education'] = 1
     elif(edu_level == 'elementary'):
