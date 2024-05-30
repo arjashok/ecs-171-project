@@ -1,11 +1,9 @@
-#helper function, corrects/validates inputs passed in
 def input_validation(input_dict):
     def binary(input_dict, key):
         value = int(input_dict[key])
         return(value == 0 or value == 1)
 
     #if passed in as floats, truncate all categorical inputs to ints. 
-    input_dict['general_health'] = int(input_dict['general_health'])
     input_dict['mental_health'] = int(input_dict['mental_health'])
     input_dict['physical_health'] = int(input_dict['physical_health'])
     input_dict['age'] = int(input_dict['age'])
@@ -14,10 +12,14 @@ def input_validation(input_dict):
     #check education level passed in as string format
 
     #based on this:
-    # 1 = Never attended school or only kindergarten 2 = Grades 1 through 8 (Elementary) 
-    #3 = Grades 9 through 11 (Some high school) 4 = Grade 12 or GED (High school graduate) 
-    #5 = College 1 year to 3 years (Some college or technical school) 
-    #6 = College 4 years or more (College graduate)
+    '''
+    1 = Never attended school or only kindergarten 
+    2 = Grades 1 through 8 (Elementary) 
+    3 = Grades 9 through 11 (Some high school) 
+    4 = Grade 12 or GED (High school graduate) 
+    5 = College 1 year to 3 years (Some college or technical school) 
+    6 = College 4 years or more (College graduate)
+    '''
     
     edu_level = input_dict['education'].lower()
     if(edu_level == 'kindergarten' or edu_level == 'never'):
@@ -91,12 +93,7 @@ def input_validation(input_dict):
         return None
 
     #based on codebook:
-    income = int(''.join(filter(str.isdigit, input_dict['income'])))
-    try:
-        # Remove any non-numeric characters, such as the dollar sign, and convert to an integer
-        income = int(''.join(filter(str.isdigit, income)))
-    except ValueError:
-        return None
+    income = int(input_dict['income'])
     '''
     1 Less than $10,000
     2 Less than $15,000 ($10,000 to less than $15,000)
@@ -126,14 +123,7 @@ def input_validation(input_dict):
     else:
         return None
 
-
-    try:
-        # Convert to lowercase to make the comparison case-insensitive
-        gen_health = input_dict['general_health']
-        gen_health = gen_health.lower().strip()
-    except AttributeError:
-        # If gen_health is not a string, return None
-        return None
+    gen_health = input_dict['general_health']
     if gen_health == 'excellent':
         input_dict['general_health'] = 1
     elif gen_health == 'very good':
@@ -147,7 +137,7 @@ def input_validation(input_dict):
     else:
         return None
 
-    
+    print("h")
     
     if (not binary(input_dict, 'high_bp')):
         return None
@@ -215,12 +205,3 @@ def input_validation(input_dict):
         return None
 
     return input_dict
-    
-
-    
-        
-        
-    
-
-    
-    
