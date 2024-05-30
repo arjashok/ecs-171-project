@@ -17,6 +17,7 @@ test_data = {
   "fruits": "1",
   "veggies": "1",
   "heavy_drinker": "0",
+  "healthcare": "1",
   "no_doc_bc_cost": "0",
   "general_health": "good",
   "mental_health": "5",
