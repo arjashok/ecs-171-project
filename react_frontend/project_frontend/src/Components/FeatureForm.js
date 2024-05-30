@@ -27,6 +27,8 @@ function FeatureForm(){
         income: ""
     });
 
+    const [response, setResponse] = useState(null);
+
     function submit(e){
         e.preventDefault();
         console.log()
@@ -56,6 +58,7 @@ function FeatureForm(){
         }).then(
             res=> {
                 console.log(res.data);
+                setResponse(res.data);
             }
         ).catch(
             error => {
@@ -72,6 +75,7 @@ function FeatureForm(){
 
     return (
         <div>
+        <div style={{display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh'}}>
             <form onSubmit={(e)=>submit(e)}>
                 <div>
                     <label>high_bp:</label>
@@ -161,6 +165,29 @@ function FeatureForm(){
                     <button>Submit</button>
                 </div>
             </form>
+        </div>
+
+            <div  style={{ marginTop: "20px", textAlign: 'left', paddingLeft: '20px' }}>
+                {response && (
+                    <div>
+                        {response.error && response.message ? (
+                            <div>
+                                <h3 style={{ color: "red" }}>{response.message}</h3>
+                                <p style={{ color: "red" }}>{response.error}</p>
+                            </div>
+                        ): (
+                            response.prediction && response.confidence && response.analysis && (
+                                <div>
+                                    <h3>Prediction Details:</h3>
+                                    <p>Prediction: {response.prediction}</p>
+                                    <p>Confidence: {response.confidence}</p>
+                                    <p>Analysis: {response.analysis}</p>
+                                </div>
+                            )
+                        )}
+                    </div>
+                )}
+            </div>
         </div>
     );
 }

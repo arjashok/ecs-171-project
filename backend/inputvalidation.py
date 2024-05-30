@@ -3,6 +3,13 @@ def input_validation(input_dict):
         value = int(input_dict[key])
         return(value == 0 or value == 1)
 
+
+    for key in input_dict:
+        if(input_dict[key] == ""):
+            error = f"Missing Input: {key}"
+            print(error)
+            return None, error
+
     #if passed in as floats, truncate all categorical inputs to ints. 
     input_dict['mental_health'] = int(input_dict['mental_health'])
     input_dict['physical_health'] = int(input_dict['physical_health'])
@@ -35,7 +42,7 @@ def input_validation(input_dict):
     elif(edu_level == 'graduate'):
         input_dict['education'] = 6
     else:
-        return None
+        return None, "Error in: education"
 
     #set passed in age into appropriate category
 
@@ -90,7 +97,7 @@ def input_validation(input_dict):
     elif 99 >= age >= 80:
         input_dict['age'] = 13
     else:
-        return None
+        return None, "Error in: age"
 
     #based on codebook:
     income = int(input_dict['income'])
@@ -121,7 +128,7 @@ def input_validation(input_dict):
     elif income >= 75000:
         input_dict['income'] = 8
     else:
-        return None
+        return None, "Error in: income"
 
     gen_health = input_dict['general_health']
     if gen_health == 'excellent':
@@ -135,73 +142,73 @@ def input_validation(input_dict):
     elif gen_health == 'poor':
         input_dict['general_health'] = 5
     else:
-        return None
+        return None, "Error in: general_health"
 
     print("h")
     
     if (not binary(input_dict, 'high_bp')):
-        return None
+        return None, "Error in: high_bp"
         
     if (not binary(input_dict, 'high_chol')):
-        return None
+        return None, "Error in: high_chol"
         
     if (not binary(input_dict, 'chol_check')):
-        return None
+        return None, "Error in: chol_check"
         
     if(not (int(input_dict['bmi']) <= 100 and int(input_dict['bmi']) >= 0)):
-        return None
+        return None, "Error in: bmi"
         
     if(not binary(input_dict, 'smoker')):
-        return None
+        return None, "Error in: smoker"
         
     if(not binary(input_dict, 'stroke')):
-        return None
+        return None, "Error in: stroke"
         
     if(not binary(input_dict, 'heart_disease')):
-        return None
+        return None, "Error in: heart_disease"
         
     if(not binary(input_dict, 'physical_activity')):
-        return None
+        return None, "Error in: physical_activity"
         
     if(not binary(input_dict, 'fruits')):
-        return None
+        return None, "Error in: fruits"
         
     if(not binary(input_dict, 'veggies')):
-        return None
+        return None, "Error in: veggies"
         
     if(not binary(input_dict, 'heavy_drinker')):
-        return None
+        return None, "Error in: heavy_drinker"
         
     if(not binary(input_dict, 'healthcare')):
-        return None
+        return None, "Error in: healthcare"
         
     if(not binary(input_dict, 'no_doc_bc_cost')):
-        return None
+        return None, "Error in: no_doc_bc_cost"
 
 
     if(not (input_dict['general_health'] >=1 and input_dict['general_health']) <= 5):
         #checks for integer between 1 and 5 for the 5 categories. 
-        return None
+        return None, "Error in: general_health"
   
     if(not (input_dict['mental_health'] >=0 and input_dict['mental_health']) <= 30):
-        return None
+        return None, "Error in: mental_health"
  
     if(not (input_dict['physical_health'] >=0 and input_dict['physical_health'] <= 30)):
-        return None
+        return None, "Error in: physical_health"
         
     if(not binary(input_dict, 'diff_walk')):
-        return None
+        return None, "Error in: diff_walk"
         
     if(not binary(input_dict, 'sex')):
-        return None
+        return None, "Error in: sex"
         
     if(not (input_dict['age'] >= 0 and input_dict['age'] <= 13)):
-        return None
+        return None, "Error in: age"
     
     if(not (int(input_dict['education'] >= 1) and int(input_dict['education']) <= 6)):
-        return None   
+        return None, "Error in: education" 
         
     if(not (input_dict['income'] >= 1 and input_dict['income'] <= 8)):
-        return None
+        return None, "Error in: income"
 
-    return input_dict
+    return input_dict, ""

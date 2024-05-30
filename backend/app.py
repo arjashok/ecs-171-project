@@ -37,12 +37,16 @@ cors = CORS(app, resources={r"/model/*": {"origins": "http://localhost:3000"}})
 @cross_origin(origin='http://localhost:3000')
 def predict():
     data = request.json
-    data = iv.input_validation(data)
+    data, error = iv.input_validation(data)
+    print(data)
     if(data == None):
-        return jsonify({"error": "invalid input"})
+        return jsonify({"error": error,
+                        "message": "Invalid Input"})
     else:
         # Returns Prediction, Confidence, and Analysis
-        return jsonify({"prediction": "dummy_prediction"})
+        return jsonify({"prediction": "dummy_prediction",
+                        "confidence": "dummy_confidence",
+                        "analysis": "dummy_analysis"})
 
 
 if __name__ == "__main__":

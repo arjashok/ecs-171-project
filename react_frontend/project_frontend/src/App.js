@@ -3,7 +3,7 @@ import FeatureForm from './Components/FeatureForm';
 
 function App() {
   return (
-    <div className="FeatureList">
+    <div>
       <FeatureForm/>
     </div>
   );
