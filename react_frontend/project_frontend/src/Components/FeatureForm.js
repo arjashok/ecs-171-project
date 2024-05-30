@@ -15,6 +15,7 @@ function FeatureForm(){
         fruits: "",
         veggies: "",
         heavy_drinker: "",
+        healthcare: "",
         no_doc_bc_cost: "",
         general_health: "",
         mental_health: "",
@@ -42,6 +43,7 @@ function FeatureForm(){
             fruits: data.fruits,
             veggies: data.veggies,
             heavy_drinker: data.heavy_drinker,
+            healthcare: data.healthcare,
             no_doc_bc_cost: data.no_doc_bc_cost,
             general_health: data.general_health,
             mental_health: data.mental_health,
@@ -114,6 +116,10 @@ function FeatureForm(){
                 <div>
                     <label>heavy_drinker:</label>
                     <input onChange={(e)=>handle(e)} id = "heavy_drinker" value={data.heavy_drinker} placeholder = "heavy_drinker" type="text" name="heavy_drinker"></input>
+                </div>
+                <div>
+                    <label>healthcare:</label>
+                    <input onChange={(e)=>handle(e)} id = "healthcare" value={data.healthcare} placeholder = "healthcare" type="text" name="healthcare"></input>
                 </div>
                 <div>
                     <label>no_doc_bc_cost:</label>
