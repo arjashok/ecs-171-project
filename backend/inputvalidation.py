@@ -52,13 +52,14 @@ def input_validation(input_dict):
     11 Age 70 to 74
     12 Age 75 to 79
     13 Age 80 or older(99)
-    '''
     age = input_dict['age']
     #check if possible to cast to an int, otherwise return None
     try:
-        income = int(''.join(filter(str.isdigit, income)))
+        age = int(''.join(filter(str.isdigit, age)))
     except ValueError:
         return None
+    '''
+    age = input_dict['age']
     
     if 18 <= age <= 24:
         input_dict['age'] = 1
@@ -188,14 +189,14 @@ def input_validation(input_dict):
         return None
 
 
-    if(not (int(input_dict['general_health']) >=1 and int(input_dict['general_health']) <= 5)):
+    if(not (input_dict['general_health'] >=1 and input_dict['general_health']) <= 5):
         #checks for integer between 1 and 5 for the 5 categories. 
         return None
   
-    if(not (int(input_dict['mental_health']) >=0 and int(input_dict['mental_health']) <= 30)):
+    if(not (input_dict['mental_health'] >=0 and input_dict['mental_health']) <= 30):
         return None
  
-    if(not (int(input_dict['physical_health']) >=0 and int(input_dict['physical_health']) <= 30)):
+    if(not (input_dict['physical_health'] >=0 and input_dict['physical_health'] <= 30)):
         return None
         
     if(not binary(input_dict, 'diff_walk')):
@@ -204,13 +205,13 @@ def input_validation(input_dict):
     if(not binary(input_dict, 'sex')):
         return None
         
-    if(not (int(input_dict['age']) >= 0 and int(input_dict['age'] <= 13))):
+    if(not (input_dict['age'] >= 0 and input_dict['age'] <= 13)):
         return None
     
     if(not (int(input_dict['education'] >= 1) and int(input_dict['education']) <= 6)):
         return None   
         
-    if(not (int(input_dict['income']) >= 1 and int(input_dict['income']) <= 8)):
+    if(not (input_dict['income'] >= 1 and input_dict['income'] <= 8)):
         return None
 
     return input_dict
