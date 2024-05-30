@@ -24,8 +24,8 @@ test_data = {
   "diff_walk": "0",
   "sex": "1",
   "age": "30",
-  "education": "4",
-  "income": "5"
+  "education": "high school graduate",
+  "income": "45000"
 }
 
 
