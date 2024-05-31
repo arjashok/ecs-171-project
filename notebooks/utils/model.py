@@ -1,5 +1,5 @@
 """
-    @brief Dataset abstraction.
+    @brief Model abstraction.
     @author Arjun Ashok
 """
 
@@ -551,6 +551,7 @@ class MLPClassifier:
 
     # inferred members
     data: pd.DataFrame = field(default=None)                                    # dataset
+    scaler: Any = field(default=None)                                           # scaler for predictions
     model: LinearNN = field(default=None)                                       # underlying model
     model_lookup_path: str = field(default="../models/model_lookup.csv")        # model lookup
     optimizer: Any = field(default=None)                                        # optimizer function
@@ -587,8 +588,9 @@ class MLPClassifier:
         )
 
         # make augmentations
-        self.X_train, self.X_test, self.y_train, self.y_test = post_split_pipeline(
-            self.X_train, self.X_test, self.y_train, self.y_test, self.target, list(set(self.data.columns) - {self.target})
+        self.X_train, self.X_test, self.y_train, self.y_test, self.scaler = post_split_pipeline(
+            self.X_train, self.X_test, self.y_train, self.y_test, self.target, 
+            list(set(self.data.columns) - {self.target})
         )
 
         # report
@@ -754,6 +756,23 @@ class MLPClassifier:
         self.model.eval()
 
         return True
+
+
+    def prepare_data(self, df: pd.DataFrame) -> np.ndarray:
+        """
+            Applies the necessary transformations to the dataset so we can 
+            propagate a prediction through.
+
+            @param df: observation(s) to transform
+
+            @returns numpy ndarray ready for predict method
+        """
+
+        # normalize
+        X = normalize_features(df, list(df.columns))
+
+        # convert to ndarray
+        return X.to_numpy()
 
 
     def train_model(self, verbose: int=0) -> None:
