@@ -75,99 +75,120 @@ function FeatureForm(){
 
     return (
         <div>
-        <div style={{display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh'}}>
+        <div style={{display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
             <form onSubmit={(e)=>submit(e)}>
-                <div>
-                    <label>high_bp:</label>
+                <div style={{marginBottom: "15px"}}>
+                    <label>Do you have high blood pressure? (0: no | 1: yes):</label>
+                    <br />
                     <input onChange={(e)=>handle(e)} id = "high_bp" value={data.high_bp} placeholder="high_bp" type="text" name="high_bp"></input>
                 </div>
-                <div>
-                    <label>high_chol:</label>
+                <div style={{marginBottom: "15px"}}>
+                    <label>Do you have high cholestral? (0: no | 1: yes):</label>
+                    <br />
                     <input onChange={(e)=>handle(e)} id = "high_chol" value={data.high_chol} placeholder = "high_chol" type="text" name="high_chol"></input>
                 </div>
-                <div>
-                    <label>chol_check:</label>
+                <div style={{marginBottom: "15px"}}>
+                    <label>Have you had a cholestral check in the past 5 years? (0: no | 1: yes):</label>
+                    <br />
                     <input onChange={(e)=>handle(e)} id = "chol_check" value={data.chol_check} placeholder = "chol_check" type="text" name="chol_check"></input>
                 </div>
-                <div>
-                    <label>bmi:</label>
+                <div style={{marginBottom: "15px"}}>
+                    <label>What is your BMI? (0-100):</label>
+                    <br />
                     <input onChange={(e)=>handle(e)} id = "bmi" value={data.bmi} placeholder = "bmi" type="text" name="bmi"></input>
                 </div>
-                <div>
-                    <label>smoker:</label>
+                <div style={{marginBottom: "15px"}}>
+                    <label>Have you smoked 100 cigarettes in your life? (0: no | 1: yes):</label>
+                    <br />
                     <input onChange={(e)=>handle(e)} id = "smoker" value={data.smoker} placeholder = "smoker" type="text" name="smoker"></input>
                 </div>
-                <div>
-                    <label>stroke:</label>
+                <div style={{marginBottom: "15px"}}>
+                    <label>Have you had a stroke? (0: no | 1: yes):</label>
+                    <br />
                     <input onChange={(e)=>handle(e)} id = "stroke" value={data.stroke} placeholder = "stroke" type="text" name="stroke"></input>
                 </div>
-                <div>
-                    <label>heart_disease:</label>
+                <div style={{marginBottom: "15px"}}>
+                    <label>Do you have a heart disease? (0: no | 1: yes):</label>
+                    <br />
                     <input onChange={(e)=>handle(e)} id = "heart_disease" value={data.heart_disease} placeholder = "heart_disease" type="text" name="heart_disease"></input>
                 </div>
-                <div>
-                    <label>physical_activity:</label>
+                <div style={{marginBottom: "15px"}}>
+                    <label>Have you done physical activity in past 30 days? (0: no | 1: yes):</label>
+                    <br />
                     <input onChange={(e)=>handle(e)} id = "physical_activity" value={data.physical_activity} placeholder = "physical_activity" type="text" name="physical_activity"></input>
                 </div>
-                <div>
-                    <label>fruits:</label>
+                <div style={{marginBottom: "15px"}}>
+                    <label>Do you consume fruits daily? (0: no | 1: yes):</label>
+                    <br />
                     <input onChange={(e)=>handle(e)} id = "fruits" value={data.fruits} placeholder = "fruits" type="text" name="fruits"></input>
                 </div>
-                <div>
-                    <label>veggies:</label>
+                <div style={{marginBottom: "15px"}}>
+                    <label>Do you consume veggies daily? (0: no | 1: yes):</label>
+                    <br />
                     <input onChange={(e)=>handle(e)} id = "veggies" value={data.veggies} placeholder = "veggies" type="text" name="veggies"></input>
                 </div>
-                <div>
-                    <label>heavy_drinker:</label>
+                <div style={{marginBottom: "15px"}}>
+                    <label>Are you a heavy drinker? (Men: More than 14 drinks Weekly, Women: More than 7 drinks Weekly) (0: no | 1: yes):</label>
+                    <br />
                     <input onChange={(e)=>handle(e)} id = "heavy_drinker" value={data.heavy_drinker} placeholder = "heavy_drinker" type="text" name="heavy_drinker"></input>
                 </div>
-                <div>
-                    <label>healthcare:</label>
+                <div style={{marginBottom: "15px"}}>
+                    <label>Do you have any kind of healthcare coverage? (0: no | 1: yes):</label>
+                    <br />
                     <input onChange={(e)=>handle(e)} id = "healthcare" value={data.healthcare} placeholder = "healthcare" type="text" name="healthcare"></input>
                 </div>
-                <div>
-                    <label>no_doc_bc_cost:</label>
+                <div style={{marginBottom: "15px"}}>
+                    <label>In the past 12 months, have you wanted to see a doctor but couldn't because of the cost? (0: no | 1: yes):</label>
+                    <br />
                     <input onChange={(e)=>handle(e)} id = "no_doc_bc_cost" value={data.no_doc_bc_cost} placeholder = "no_doc_bc_cost" type="text" name="no_doc_bc_cost"></input>
                 </div>
-                <div>
-                    <label>general_health:</label>
+                <div style={{marginBottom: "15px"}}>
+                    <label>In general, how good is your health? (excellent | very good | good | fair | poor):</label>
+                    <br />
                     <input onChange={(e)=>handle(e)} id = "general_health" value={data.general_health} placeholder = "general_health" type="text" name="general_health"></input>
                 </div>
-                <div>
-                    <label>mental_health:</label>
+                <div style={{marginBottom: "15px"}}>
+                    <label>How many days in the past month was your mental health not good? (0-30):</label>
+                    <br />
                     <input onChange={(e)=>handle(e)} id = "mental_health" value={data.mental_health} placeholder = "mental_health" type="text" name="mental_health"></input>
                 </div>
-                <div>
-                    <label>physical_health:</label>
+                <div style={{marginBottom: "15px"}}>
+                    <label>How many days in the past month was your physical health not good? (0-30):</label>
+                    <br />
                     <input onChange={(e)=>handle(e)} id = "physical_health" value={data.physical_health} placeholder = "physical_health" type="text" name="physical_health"></input>
                 </div>
-                <div>
-                    <label>diff_walk:</label>
+                <div style={{marginBottom: "15px"}}>
+                    <label>Do you have serious difficulty walking or climbing stairs? (0: no | 1: yes):</label>
+                    <br />
                     <input onChange={(e)=>handle(e)} id = "diff_walk" value={data.diff_walk} placeholder = "diff_walk" type="text" name="diff_walk"></input>
                 </div>
-                <div>
-                    <label>sex:</label>
+                <div style={{marginBottom: "15px"}}>
+                    <label>What is your biological sex? (0: female | 1: male)</label>
+                    <br />
                     <input onChange={(e)=>handle(e)} id = "sex" value={data.sex} placeholder = "sex" type="text" name="sex"></input>
                 </div>
-                <div>
-                    <label>age:</label>
+                <div style={{marginBottom: "15px"}}>
+                    <label>What is your age? (0-99):</label>
+                    <br />
                     <input onChange={(e)=>handle(e)} id = "age" value={data.age} placeholder = "age" type="text" name="age"></input>
                 </div>
-                <div>
-                    <label>education:</label>
+                <div style={{marginBottom: "15px"}}>
+                    <label>What is your education level? (No Education | Elementary School | Some High School | High School Graduate | Some College or Technical School | College Graduate):</label>
+                    <br />
                     <input onChange={(e)=>handle(e)} id = "education" value={data.education} placeholder = "education" type="text" name="education"></input>
                 </div>
-                <div>
-                    <label>income:</label>
+                <div style={{marginBottom: "15px"}}>
+                    <label>What is your annual income? (Input a Number without a $):</label>
+                    <br />
                     <input onChange={(e)=>handle(e)} id = "income" value={data.income} placeholder = "income" type="text" name="income"></input>
                 </div>
-                <div>
-                    <button>Submit</button>
+                <div style={{marginBottom: "15px"}}>
+                    <button style={{ backgroundColor: "blue", color: "white", padding: "10px 20px", borderRadius: "5px" }}>Submit</button>
                 </div>
             </form>
         </div>
 
-            <div  style={{ marginTop: "20px", textAlign: 'left', paddingLeft: '20px' }}>
+            <div  style={{ marginTop: "20px", textAlign: "left", paddingLeft: "20px" }}>
                 {response && (
                     <div>
                         {response.error && response.message ? (

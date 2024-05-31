@@ -29,17 +29,17 @@ def input_validation(input_dict):
     '''
     
     edu_level = input_dict['education'].lower()
-    if(edu_level == 'kindergarten' or edu_level == 'never'):
+    if(edu_level == 'no education'):
         input_dict['education'] = 1
-    elif(edu_level == 'elementary'):
+    elif(edu_level == 'elementary school'):
         input_dict['education'] = 2
     elif(edu_level == 'some high school'):
         input_dict['education'] = 3
     elif(edu_level == 'high school graduate'):
         input_dict['education'] = 4
-    elif(edu_level == 'some college'):
+    elif(edu_level == 'some college or technical school'):
         input_dict['education'] = 5
-    elif(edu_level == 'graduate'):
+    elif(edu_level == 'college graduate'):
         input_dict['education'] = 6
     else:
         return None, "Error in: education"
