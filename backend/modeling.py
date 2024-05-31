@@ -6,8 +6,12 @@
 
 
 # Environment Setup
-from notebooks.utils.model import *
-from notebooks.utils.wrappers import post_split_pipeline
+import pandas as pd
+from typing import Any
+
+import sys
+sys.path.append('../notebooks/')
+from utils.model import MLPClassifier
 
 
 # Utility
@@ -52,15 +56,22 @@ def generate_prediction(user_data: dict[str, str | float | int]=None) -> tuple[s
     model.load_model()
 
     # data transformation
+    if any(not isinstance(v, list) for k, v in user_data.items()):
+        converted_dict =  dict()
+        for k, v in user_data.items():
+            converted_dict[k] = [v] if not isinstance(v, list) else v
+
+        user_data = converted_dict
+
     user_df = pd.DataFrame(user_data)
     user_prepped_data = model.prepare_data(user_df)
 
     # prediction + confidence
-    labels = {
-        "0": "Diabetes Free",
-        "1": "Pre-Diabetes",
-        "2": "Diabetes"
-    }
+    labels = [
+        "Diabetes Free",
+        "Pre-Diabetes",
+        "Diabetes"
+    ]
     prediction, confidence = model.predict(user_prepped_data)
 
     # generate analysis
