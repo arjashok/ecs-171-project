@@ -135,5 +135,6 @@ def up_sampling(df: pd.DataFrame, target: str, categorical_features: list[str]=N
     sm = SMOTE(random_state=42)
     X_res, y_res = sm.fit_resample(df.drop(columns=target), df[target])
     df_new = pd.concat([X_res, y_res], axis=1)
+    df_new = df_new.round()
 
     return df_new

@@ -9,6 +9,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+import shap
 import torch
 import torch.nn as nn
 from torch.optim import Adam
@@ -41,6 +42,7 @@ class TreeClassifier:
     target: str = field()                                                       # target feature
     path: str = field()                                                         # dataset path
     hyperparams: dict[str, int | float | str] = field(default=None)             # hyperparams; optional parameter
+    upsample: bool = field(default=False)                                       # whether to correct imbalance or not
 
     # inferred members
     data: pd.DataFrame = field(default=None)                                    # dataset
@@ -74,7 +76,9 @@ class TreeClassifier:
 
         # make augmentations
         self.X_train, self.X_test, self.y_train, self.y_test = post_split_pipeline(
-            self.X_train, self.X_test, self.y_train, self.y_test, self.target, list(set(self.data.columns) - {self.target})
+            self.X_train, self.X_test, self.y_train, self.y_test, self.target, 
+            list(set(self.data.columns) - {self.target}),
+            upsample=self.upsample
         )
 
         # report
@@ -548,6 +552,8 @@ class MLPClassifier:
     target: str = field()                                                       # target feature
     path: str = field()                                                         # dataset path
     hyperparams: dict[str, int | float | str] = field(default=None)             # hyperparams; optional parameter
+    upsample: bool = field(default=False)                                       # whether to correct imbalance or not
+    loss_balance: bool = field(default=False)                                   # whether to account for imbalance in loss-calc
 
     # inferred members
     data: pd.DataFrame = field(default=None)                                    # dataset
@@ -589,7 +595,8 @@ class MLPClassifier:
         # make augmentations
         self.X_train, self.X_test, self.y_train, self.y_test = post_split_pipeline(
             self.X_train, self.X_test, self.y_train, self.y_test, self.target, 
-            list(set(self.data.columns) - {self.target})
+            list(set(self.data.columns) - {self.target}),
+            upsample=self.upsample
         )
 
         # report
@@ -786,7 +793,18 @@ class MLPClassifier:
                 "reduce": torch.optim.lr_scheduler.ReduceLROnPlateau
             }[self.scheduler](self.optimizer)
         
-        self.loss_fn = nn.CrossEntropyLoss()
+        if self.loss_balance:
+            loss_weights = dict(self.y_train.value_counts())
+            loss_weights = [loss_weights[i] for i in range(self.y_test.max() + 1)]
+            total_obs = sum(loss_weights)
+            loss_weights = [(total_obs - i) / total_obs for i in loss_weights]
+
+            self.loss_fn = nn.CrossEntropyLoss(
+                weight=torch.tensor(loss_weights).to(torch.float).to(self.device)
+            )
+        else:
+            self.loss_fn = nn.CrossEntropyLoss()
+        
         losses = {k: list() for k in ["train", "test"]}
         best_loss = float("inf")
         best_epoch = 0
@@ -866,7 +884,7 @@ class MLPClassifier:
             plt.show()
 
 
-    def test_model(self) -> None:
+    def test_model(self, save: bool=True) -> None:
         """
             Generates test error.
         """
@@ -896,7 +914,9 @@ class MLPClassifier:
         self.score = [{"label": label, "precision": p[label], "recall": r[label], \
                        "f1-score": f[label], "support": s[label], "accuracy": a * 100} \
                         for label in labels]
-        self.save_model()
+        
+        if save:
+            self.save_model()
 
 
     def predict(self, X: np.ndarray) -> tuple[np.array, np.array]:
@@ -1059,11 +1079,24 @@ class MLPClassifier:
         self.save_model()
 
 
+    def explain_model(self) -> dict[str, float]:
+        """
+            Returns a dictionary of feature importance based on some model 
+            explainer's output.
+        """
+
+        # explain via shap
+        explainer = shap.KernelExplainer(self.model.predict, self.X_train.iloc[:50, :])
+        shap_values = explainer.shap_values(self.X_train.iloc[299, :], nsamples=500)
+        shap.force_plot(explainer.expected_value, shap_values, self.X_test.iloc[299, :])
+
+
 @dataclass(slots=True)
 class LogClassifier:
     # user-set members
     target: str = field()                                                       # target feature
     path: str = field()                                                         # dataset path
+    upsample: bool = field(default=False)                                       # whether to correct imbalance or not
 
     # inferred members
     data: pd.DataFrame = field(default=None)                                    # dataset
@@ -1097,7 +1130,9 @@ class LogClassifier:
 
         # make augmentations
         self.X_train, self.X_test, self.y_train, self.y_test = post_split_pipeline(
-            self.X_train, self.X_test, self.y_train, self.y_test, self.target, list(set(self.data.columns) - {self.target})
+            self.X_train, self.X_test, self.y_train, self.y_test, self.target, 
+            list(set(self.data.columns) - {self.target}),
+            upsample=self.upsample
         )
 
         # report
