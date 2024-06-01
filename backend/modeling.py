@@ -11,7 +11,8 @@ from typing import Any
 
 import sys
 sys.path.append('../notebooks/')
-from utils.model import MLPClassifier
+from utils.model import MLPClassifier, LogClassifier, TreeClassifier
+from inputvalidation import input_validation
 
 
 # Utility
@@ -49,10 +50,11 @@ def generate_prediction(user_data: dict[str, str | float | int]=None) -> tuple[s
         raise ValueError(f"Invalid pipeline prediction input! Expected dict, got {type(user_data)} instead :(")
 
     # load best model
-    model = MLPClassifier(
-        target="diabetes",
-        path="../datasets/pre_split_processed.parquet"
-    )
+    model_args = {
+        "target": "diabetes",
+        "path": "../datasets/pre_split_processed.parquet"
+    }
+    model = MLPClassifier(**model_args)
     model.load_model()
 
     # data transformation
@@ -81,4 +83,35 @@ def generate_prediction(user_data: dict[str, str | float | int]=None) -> tuple[s
     return labels[prediction[0]], confidence[0], analysis
     
 
+if __name__ == "__main__":
+    test_data = [{
+        "high_bp": "1",
+        "high_chol": "1",
+        "chol_check": "1",
+        "bmi": "25",
+        "smoker": "1",
+        "stroke": "0",
+        "heart_disease": "0",
+        "physical_activity": "1",
+        "fruits": "1",
+        "veggies": "1",
+        "heavy_drinker": "0",
+        "healthcare": "1",
+        "no_doc_bc_cost": "0",
+        "general_health": "good",
+        "mental_health": "5",
+        "physical_health": "5",
+        "diff_walk": "0",
+        "sex": "1",
+        "age": "50",
+        "education": "high school graduate",
+        "income": "45000"
+    }]
+
+    for td in test_data:
+        td, _ = input_validation(td)
+        print(td)
+        result = generate_prediction(td)
+        print(result)
+        print()
 

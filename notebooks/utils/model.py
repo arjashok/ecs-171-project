@@ -242,6 +242,23 @@ class TreeClassifier:
         return True
 
 
+    def prepare_data(self, df: pd.DataFrame) -> pd.DataFrame:
+        """
+            Applies the necessary transformations to the dataset so we can 
+            propagate a prediction through.
+
+            @param df: observation(s) to transform
+
+            @returns object ready for predict method
+        """
+
+        # normalize
+        X = normalize_features(df, list(df.columns))
+
+        # DON'T CONVERT
+        return X
+
+
     def train_model(self, verbose: int=2, **kwargs) -> None:
         """
             Trains the model, assuming no hyperparameter optimization.
@@ -748,12 +765,14 @@ class MLPClassifier:
         else:
             # stable sort
             model_reports.sort_values(by=priority_list, ascending=False, inplace=True, ignore_index=True)
+            model_reports.to_csv(self.model_lookup_path, index=False)
             path = model_reports["path"][0]
         
         # load model
         if path is None:
             return False
         
+        path = "ffnn-classifier-[p_0.4159]-[r_0.3971]-[f_0.3869]-[a_76.0446]"
         self.set_hyperparams(
             json.load(open(f"../models/hyperparams/{path}.json", "r"))
         )
@@ -775,7 +794,8 @@ class MLPClassifier:
         """
 
         # normalize
-        X = normalize_features(df, list(df.columns))
+        X = df
+        # X = normalize_features(df, list(df.columns))
 
         # DON'T CONVERT
         return X
@@ -1162,12 +1182,33 @@ class LogClassifier:
         return True
 
 
+    def prepare_data(self, df: pd.DataFrame) -> pd.DataFrame:
+        """
+            Applies the necessary transformations to the dataset so we can 
+            propagate a prediction through.
+
+            @param df: observation(s) to transform
+
+            @returns object ready for predict method
+        """
+
+        # normalize
+        X = normalize_features(df, list(df.columns))
+
+        # DON'T CONVERT
+        return X
+
+
     def train_model(self, verbose: int=0) -> None:
         """
             Trains the model using logistic regression
         """
         
         # train
+        sort_index = np.argsort(self.y_train)
+        self.y_train = self.y_train[sort_index]
+        self.X_train = self.X_train[sort_index]
+        
         self.model.fit(self.X_train.values, self.y_train.values)
 
 
@@ -1211,5 +1252,8 @@ class LogClassifier:
         """
 
         # wrap
-        return self.model.predict(X)
+        raw_preds = self.model.predict_proba(X)
+        pred = np.argmax(raw_preds)
+        conf = raw_preds[np.argmax(raw_preds)]
+        return pred, conf
 

@@ -143,47 +143,24 @@ def input_validation(input_dict):
         input_dict['general_health'] = 5
     else:
         return None, "Error in: general_health"
-
-    print("h")
     
-    if (not binary(input_dict, 'high_bp')):
-        return None, "Error in: high_bp"
+
+    bin_cols = ["high_bp", "high_chol", "chol_check", "smoker", "stroke", 
+                "heart_disease", "physical_activity", "fruits", "veggies",
+                "heavy_drinker", "healthcare", "no_doc_bc_cost", "diff_walk",
+                "sex"]
+    
+    for col in bin_cols:
+        if not binary(input_dict, col):
+            return None, f"Error in: {col}"
+        input_dict[col] = int(input_dict[col])
+    
+    continuous_cols = ["bmi"]
+    for col in continuous_cols:
+        input_dict[col] = float(input_dict[col])
         
-    if (not binary(input_dict, 'high_chol')):
-        return None, "Error in: high_chol"
-        
-    if (not binary(input_dict, 'chol_check')):
-        return None, "Error in: chol_check"
-        
-    if(not (int(input_dict['bmi']) <= 100 and int(input_dict['bmi']) >= 0)):
+    if not (input_dict['bmi'] <= 100 and input_dict['bmi'] >= 0):
         return None, "Error in: bmi"
-        
-    if(not binary(input_dict, 'smoker')):
-        return None, "Error in: smoker"
-        
-    if(not binary(input_dict, 'stroke')):
-        return None, "Error in: stroke"
-        
-    if(not binary(input_dict, 'heart_disease')):
-        return None, "Error in: heart_disease"
-        
-    if(not binary(input_dict, 'physical_activity')):
-        return None, "Error in: physical_activity"
-        
-    if(not binary(input_dict, 'fruits')):
-        return None, "Error in: fruits"
-        
-    if(not binary(input_dict, 'veggies')):
-        return None, "Error in: veggies"
-        
-    if(not binary(input_dict, 'heavy_drinker')):
-        return None, "Error in: heavy_drinker"
-        
-    if(not binary(input_dict, 'healthcare')):
-        return None, "Error in: healthcare"
-        
-    if(not binary(input_dict, 'no_doc_bc_cost')):
-        return None, "Error in: no_doc_bc_cost"
 
 
     if(not (input_dict['general_health'] >=1 and input_dict['general_health']) <= 5):
@@ -195,12 +172,6 @@ def input_validation(input_dict):
  
     if(not (input_dict['physical_health'] >=0 and input_dict['physical_health'] <= 30)):
         return None, "Error in: physical_health"
-        
-    if(not binary(input_dict, 'diff_walk')):
-        return None, "Error in: diff_walk"
-        
-    if(not binary(input_dict, 'sex')):
-        return None, "Error in: sex"
         
     if(not (input_dict['age'] >= 0 and input_dict['age'] <= 13)):
         return None, "Error in: age"
