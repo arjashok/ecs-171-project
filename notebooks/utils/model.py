@@ -713,6 +713,12 @@ class MLPClassifier:
         ])
         model_reports = pd.concat([model_reports, *add_rows], ignore_index=True)
         model_reports.drop_duplicates(inplace=True)
+        model_reports.sort_values(by=[
+            "f1-score",
+            "accuracy",
+            "precision",
+            "recall"
+        ])
         model_reports.to_csv(self.model_lookup_path, index=False)
 
     
@@ -765,8 +771,8 @@ class MLPClassifier:
         else:
             # stable sort
             model_reports.sort_values(by=priority_list, ascending=False, inplace=True, ignore_index=True)
-            model_reports.to_csv(self.model_lookup_path, index=False)
             path = model_reports["path"][0]
+            # model_reports.to_csv(self.model_lookup_path, index=False)
         
         # load model
         if path is None:
@@ -1205,9 +1211,9 @@ class LogClassifier:
         """
         
         # train
-        sort_index = np.argsort(self.y_train)
-        self.y_train = self.y_train[sort_index]
-        self.X_train = self.X_train[sort_index]
+        # sort_index = np.argsort(self.y_train)
+        # self.y_train = self.y_train[sort_index]
+        # self.X_train = self.X_train[sort_index]
         
         self.model.fit(self.X_train.values, self.y_train.values)
 
@@ -1218,7 +1224,7 @@ class LogClassifier:
         """
 
         # predict
-        y_pred = self.predict(self.X_test.values)
+        y_pred, y_conf = self.predict(self.X_test.values)
         y_test = self.y_test
 
         # metrics + report
@@ -1253,7 +1259,113 @@ class LogClassifier:
 
         # wrap
         raw_preds = self.model.predict_proba(X)
-        pred = np.argmax(raw_preds)
-        conf = raw_preds[np.argmax(raw_preds)]
-        return pred, conf
+        preds = np.argmax(raw_preds, axis=1)
+        confs = raw_preds[np.arange(preds.shape[0]), preds]
+
+        return preds, confs
+
+
+    def explain_model(self, **kwargs) -> dict[str, float]:
+        """
+            Returns a dictionary of feature importance based on some model 
+            explainer's output.
+
+            We'll only take the diabetes coefs since they mirror (balance) the 
+            positive predictions.
+        """
+
+        # unpack coefs
+        coefs = list(self.model.coef_[0])
+        feature_names = list(self.data.drop(columns=self.target).columns)
+
+        # print report
+        importance = dict(zip(feature_names, coefs))
+        print(json.dumps(importance, indent=4))
+        return importance
+
+
+    def patient_analysis(self, user_info: dict[str, int | float], **kwargs) -> str:
+        """
+            Generates a feature importance lookup and gauges what contributes 
+            against the patient's risk of diabetes and what helps them.
+        """
+
+        # generate importance 
+        importance = self.explain_model()
+        importance_df = pd.DataFrame({
+            "feature": importance.keys(),
+            "weight": importance.values()
+        })
+        user_info_df = pd.DataFrame({
+            "feature": user_info.keys(),
+            "weight": user_info.values()
+        })
+
+        # create a lookup of importance based on feature weight and user info
+        importance_df.sort_values(by="feature", ascending=False)
+        user_info_df.sort_values(by="feature", ascending=False)
+        importance_df["weight"] *= user_info_df["weight"]
+        importance_df.sort_values(by="weight", ascending=True)
+
+        # risk analysis: setup trackers
+        categories = ["most-harmful", "harmful", "irrelevant", "helpful", "most-helpful"]
+        thresholds = [-0.3, -0.05, 0.05, 0.05, 0.3]
+        grouped_features = dict.fromkeys(categories)
+        report = dict(zip(categories, ["" for _ in categories]))
+
+        # group features into categories
+        grouped_features["most-harmful"] =  set(importance_df[importance_df["weight"] < thresholds["most-harmful"]]["feature"])
+        grouped_features["harmful"]      =  set(importance_df[importance_df["weight"] <= thresholds["harmful"]]["feature"])
+        grouped_features["irrelevant"]   =  set(importance_df[abs(importance_df["weight"]) < thresholds["irrelevant"]]["feature"])
+        grouped_features["helpful"]      =  set(importance_df[importance_df["weight"] >= thresholds["helpful"]]["feature"])
+        grouped_features["most-helpful"] =  set(importance_df[importance_df["weight"] > thresholds["most-helpful"]]["feature"])
+
+        # generate report
+        for row in importance_df.iterrows():
+            # unpack
+            feature = row["feature"]
+            weight = row["weight"]
+
+            # match with category
+            if feature in grouped_features["most-harmful"]:
+                report["most-harmful"] += f" <-> {feature}: increases risk of pre-diabetes/diabetes by {-weight * 100:.2f}%; if this is above 100, this is not a good sign :("
+            elif feature in grouped_features["harmful"]:
+                report["harmful"] += f" - {feature}: increases risk of pre-diabetes/diabetes by {-weight * 100:.2f}%"
+            elif feature in grouped_features["irrelevant"]:
+                report["irrelevant"] += f" * {feature}: doesn't really apply to you in this context; this doesn't imply this behavior doesn't matter, just that for your specific health information, {feature} neither helps nor hurts you"
+            elif feature in grouped_features["helpful"]:
+                report["helpful"] += f" + {feature}: reduces risk of pre-diebetes/diabetes by {weight * 100:.2f}%"
+            elif feature in grouped_features["most-helpful"]:
+                report["most-helpful"] += f" + {feature}: reduces risk of pre-diebetes/diabetes by {weight * 100:.2f}%; if this is above 100, good job!"
+
+        # check empty
+        for k, v in report.items():
+            if v == "":
+                report[v] = "Oops... it seems like you don't have much in this category for us to analyze. This is either a really good sign :), or a really bad one :("
+
+        # full written analysis
+        report = (
+            f"""
+            According to our analysis (an linear approximation of our deep learning model), we've generated the following insights:
+            
+            ** Harmful Behaviors **
+            {report['most-harmful']}
+
+            We also noted that the following increase your risk for pre-diabetes/diabetes, but to a lesser degree than the previous:
+            {report['harmful']}
+            
+
+            ** Helpful Behaviors **
+            We haven't forgotten that you've of course done some things right:
+            {report['most-helpful']}
+
+            {report['helpful']}
+
+            ** Irrelevant **
+            The following behaviors are irrelevant to you since you either don't participate in them, or we've gauged that it doesn't really matter for you in this context:
+            {report['irrelevant']}
+            """
+        )
+                
+
 
