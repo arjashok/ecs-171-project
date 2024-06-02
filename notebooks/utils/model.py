@@ -1280,7 +1280,7 @@ class LogClassifier:
 
         # print report
         importance = dict(zip(feature_names, coefs))
-        print(json.dumps(importance, indent=4))
+        # print(json.dumps(importance, indent=4))
         return importance
 
 
@@ -1298,18 +1298,18 @@ class LogClassifier:
         })
         user_info_df = pd.DataFrame({
             "feature": user_info.keys(),
-            "weight": user_info.values()
+            "weight": [v[0] for v in user_info.values()]
         })
 
         # create a lookup of importance based on feature weight and user info
         importance_df.sort_values(by="feature", ascending=False)
         user_info_df.sort_values(by="feature", ascending=False)
-        importance_df["weight"] *= user_info_df["weight"]
+        importance_df["weight"] = importance_df["weight"].astype(float) * user_info_df["weight"]
         importance_df.sort_values(by="weight", ascending=True)
 
         # risk analysis: setup trackers
         categories = ["most-harmful", "harmful", "irrelevant", "helpful", "most-helpful"]
-        thresholds = [-0.3, -0.05, 0.05, 0.05, 0.3]
+        thresholds = dict(zip(categories, [-0.3, -0.05, 0.05, 0.05, 0.3]))
         grouped_features = dict.fromkeys(categories)
         report = dict(zip(categories, ["" for _ in categories]))
 
@@ -1321,54 +1321,56 @@ class LogClassifier:
         grouped_features["most-helpful"] =  set(importance_df[importance_df["weight"] > thresholds["most-helpful"]]["feature"])
 
         # generate report
-        for row in importance_df.iterrows():
+        for row in importance_df.itertuples(index=False):
             # unpack
-            feature = row["feature"]
-            weight = row["weight"]
+            feature = row[0]
+            weight = row[1]
 
             # match with category
             if feature in grouped_features["most-harmful"]:
-                report["most-harmful"] += f" <-> {feature}: increases risk of pre-diabetes/diabetes by {-weight * 100:.2f}%; if this is above 100, this is not a good sign :("
+                report["most-harmful"] += f" <-> {feature}: \tincreases risk of pre-diabetes/diabetes by {-weight * 100:.2f}%; if this is above 100, this is not a good sign :(\n"
             elif feature in grouped_features["harmful"]:
-                report["harmful"] += f" - {feature}: increases risk of pre-diabetes/diabetes by {-weight * 100:.2f}%"
+                report["harmful"] += f" - {feature}: \tincreases risk of pre-diabetes/diabetes by {-weight * 100:.2f}%\n"
             elif feature in grouped_features["irrelevant"]:
-                report["irrelevant"] += f" * {feature}: doesn't really apply to you in this context; this doesn't imply this behavior doesn't matter, just that for your specific health information, {feature} neither helps nor hurts you"
+                report["irrelevant"] += f" * {feature}: \tdoesn't really apply to you in this context; this doesn't imply this behavior doesn't matter, just that for your specific health information, {feature} neither helps nor hurts you\n"
             elif feature in grouped_features["helpful"]:
-                report["helpful"] += f" + {feature}: reduces risk of pre-diebetes/diabetes by {weight * 100:.2f}%"
+                report["helpful"] += f" + {feature}: \treduces risk of pre-diebetes/diabetes by {weight * 100:.2f}%\n"
             elif feature in grouped_features["most-helpful"]:
-                report["most-helpful"] += f" + {feature}: reduces risk of pre-diebetes/diabetes by {weight * 100:.2f}%; if this is above 100, good job!"
+                report["most-helpful"] += f" <+> {feature}: \treduces risk of pre-diebetes/diabetes by {weight * 100:.2f}%; if this is above 100, good job!\n"
 
         # check empty
-        for k, v in report.items():
-            if v == "":
-                report[v] = "Oops... it seems like you don't have much in this category for us to analyze. This is either a really good sign :), or a really bad one :("
+        report = {k: v if v != "" else "Oops... it seems like you don't have much in this category for us to analyze. This is either a really good sign :), or a really bad one :(\n"\
+                  for k, v in report.items()}
 
         # full written analysis
-        report = (
-            f"""
-            According to our analysis (an linear approximation of our deep learning model), we've generated the following insights:
+        final_report = (
+f"""
+According to our analysis (an linear approximation of our deep learning model), we've generated the following insights:
             
-            ** Harmful Behaviors **
-            {report['most-harmful']}
+** Harmful Behaviors **
+{report['most-harmful']}
 
-            We also noted that the following increase your risk for pre-diabetes/diabetes, but to a lesser degree than the previous:
-            {report['harmful']}
-            
+We also noted that the following increase your risk for pre-diabetes/diabetes, but to a lesser degree than the previous:
+{report['harmful']}
 
-            ** Helpful Behaviors **
-            We haven't forgotten that you've of course done some things right:
-            {report['most-helpful']}
 
-            {report['helpful']}
+** Helpful Behaviors **
+We haven't forgotten that you've of course done some things right:
+{report['most-helpful']}
 
-            ** Irrelevant **
-            The following behaviors are irrelevant to you since you either don't participate in them, or we've gauged that it doesn't really matter for you in this context:
-            {report['irrelevant']}
-            """
+{report['helpful']}
+
+
+** Irrelevant **
+The following behaviors are irrelevant to you since you either don't participate in them, or we've gauged that it doesn't really matter for you in this context:
+{report['irrelevant']}
+"""
         )
 
         # export
-        return report, importance
+        print(f"\n\n\n\n\n{final_report}\n\n\n\n\n\n")
+        exit()
+        return final_report, importance
                 
 
 

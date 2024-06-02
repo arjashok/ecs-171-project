@@ -117,8 +117,5 @@ if __name__ == "__main__":
 
     for td in test_data:
         td, _ = input_validation(td)
-        print(td)
         result = generate_prediction(td)
         print(result)
-        print()
-
