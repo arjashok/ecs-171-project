@@ -1366,6 +1366,9 @@ class LogClassifier:
             {report['irrelevant']}
             """
         )
+
+        # export
+        return report, importance
                 
 
 

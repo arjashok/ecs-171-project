@@ -16,7 +16,7 @@ from inputvalidation import input_validation
 
 
 # Utility
-def generate_analysis(user_data: pd.DataFrame, model: Any) -> tuple[str, dict]:
+def generate_analysis(user_data: dict[str, int | float]) -> tuple[str, dict]:
     """
         Generates an analysis of the user's highest risk features based on SHAP
         analysis.
@@ -26,7 +26,14 @@ def generate_analysis(user_data: pd.DataFrame, model: Any) -> tuple[str, dict]:
         @returns description as a string, dictionary of feature: importance
     """
 
-    return "ur fat lol", dict()
+    # wrap report using a linear approximation (log model)
+    clf = LogClassifier(
+        target="diabetes",
+        path="../datasets/pre_split_processed.parquet"
+    )
+    clf.load_model()
+    
+    return clf.patient_analysis(user_data)
 
 
 # Wrapper
@@ -77,7 +84,7 @@ def generate_prediction(user_data: dict[str, str | float | int]=None) -> tuple[s
     prediction, confidence = model.predict(user_prepped_data)
 
     # generate analysis
-    analysis, feature_importance = generate_analysis(user_df, model)
+    analysis, feature_importance = generate_analysis(user_data)
 
     # return all results
     return labels[prediction[0]], confidence[0], analysis
