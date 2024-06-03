@@ -31,7 +31,8 @@ def generate_analysis(user_data: dict[str, int | float]) -> tuple[str, dict]:
         target="diabetes",
         path="../datasets/pre_split_processed.parquet"
     )
-    clf.load_model()
+    if not clf.load_model():
+        clf.train_model()
     
     return clf.patient_analysis(user_data)
 

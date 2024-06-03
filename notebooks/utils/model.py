@@ -172,10 +172,9 @@ class TreeClassifier:
         add_rows = ([
                 pd.DataFrame({
                 "model-type": ["XGBoost"],
-                **{k: [v] for k, v in score_dict.items()},
+                **{k: [v] for k, v in mean_scores.items() if k[0] not in ["l", "s"]},
                 "path": [report_name]
             })
-            for score_dict in self.score
         ])
         model_reports = pd.concat([model_reports, *add_rows], ignore_index=True)
         model_reports.drop_duplicates(inplace=True)
@@ -706,10 +705,9 @@ class MLPClassifier:
         add_rows = ([
                 pd.DataFrame({
                 "model-type": ["FFNN"],
-                **{k: [v] for k, v in score_dict.items()},
+                **{k: [v] for k, v in mean_scores.items() if k[0] not in ["l", "s"]},
                 "path": [report_name]
             })
-            for score_dict in self.score
         ])
         model_reports = pd.concat([model_reports, *add_rows], ignore_index=True)
         model_reports.drop_duplicates(inplace=True)
@@ -718,7 +716,7 @@ class MLPClassifier:
             "accuracy",
             "precision",
             "recall"
-        ])
+        ], inplace=True, ascending=False)
         model_reports.to_csv(self.model_lookup_path, index=False)
 
     
@@ -1123,6 +1121,7 @@ class LogClassifier:
     target: str = field()                                                       # target feature
     path: str = field()                                                         # dataset path
     upsample: bool = field(default=False)                                       # whether to correct imbalance or not
+    hyperparams: dict[str, int | float | str] = field(default_factory=dict)     # hyperparams; optional parameters
 
     # inferred members
     data: pd.DataFrame = field(default=None)                                    # dataset
@@ -1173,18 +1172,118 @@ class LogClassifier:
         self.gen_split()
 
         # model
-        self.model = LogisticRegression()
+        if len(self.hyperparams) == 0:
+            self.hyperparams["max_iter"] = 100000
+            self.hyperparams["random_state"] = 42
+            self.hyperparams["penalty"] = "elasticnet"
+            self.hyperparams["l1_ratio"] = 0.5
+            self.hyperparams["solver"] = "saga"
+            self.hyperparams["verbose"] = 1
+        self.model = LogisticRegression(**self.hyperparams)
 
 
     # External Methods
-    def load_model(self) -> bool:
+    def save_model(self) -> None:
         """
-            Loads the model, i.e. just trains since it's as efficient as 
-            loading.
+            Saves model weights and hyperparams for future reloading.
         """
 
-        # wrap train
-        self.train_model(verbose=2)
+        # generate save path
+        mean_scores = ({
+            k: sum(d[k] for d in self.score) / len(self.score) 
+            for k in self.score[0]
+        })
+        report_name = "log-classifier-" + ("-".join([
+            f"[{metric[0]}_{perf:.4f}]" for metric, perf in mean_scores.items()
+            if metric[0] not in ["l", "s"]
+        ]))
+
+        # save both
+        json.dump(self.hyperparams, open(f"../models/hyperparams/{report_name}.json", "w"), indent=4)
+        pickle.dump(self.model, open(f"../models/weights/{report_name}.pickle", "wb"))
+
+        # save lookup
+        if os.path.exists(self.model_lookup_path):
+            model_reports = pd.read_csv(self.model_lookup_path)
+        else:
+            model_reports = pd.DataFrame()
+        
+        # add row for each label's performance
+        add_rows = ([
+                pd.DataFrame({
+                "model-type": ["Logistic"],
+                **{k: [v] for k, v in mean_scores.items() if k[0] not in ["l", "s"]},
+                "path": [report_name]
+            })
+        ])
+        model_reports = pd.concat([model_reports, *add_rows], ignore_index=True)
+        model_reports.drop_duplicates(inplace=True)
+        model_reports.sort_values(by=[
+            "f1-score",
+            "accuracy",
+            "precision",
+            "recall"
+        ], inplace=True, ascending=False)
+        model_reports.to_csv(self.model_lookup_path, index=False)
+
+
+    def load_model(self, scores: dict[str, int | float]=None, priority_list: list[str]=None) -> bool:
+        """
+            Loads the model via the scoring report. Notice that either explicit 
+            scores or a prioritization of the scores can be provided and then 
+            the best performing model will be chosen. This is done via stable 
+            sort.
+
+            @param scores: metric to performance wanted; optional
+            @param priority_list: list of metrics in order of most to least 
+                                  important
+
+            @returns whether successful or not
+        """
+
+        # load lookup
+        if not os.path.exists(self.model_lookup_path):
+            print("<WARNING> no lookup found for saved models :(")
+            return False
+        model_reports = pd.read_csv(self.model_lookup_path, engine="c")
+        model_reports = model_reports[model_reports["model-type"] == "Logistic"]
+
+        if model_reports.shape[0] == 0:
+            print("<WARNING> found 0 entries in model lookup :(")
+            return False
+
+        path = None
+
+        # ensure at least one is filled
+        if scores is None and priority_list is None:
+            priority_list = [
+                "f1-score",
+                "accuracy",
+                "precision",
+                "recall"
+            ]
+
+        # get model entry
+        if scores is not None:
+            # narrow down
+            for metric, perf in scores.items():
+                model_reports = model_reports[model_reports[metric] == perf]
+            
+            # if any entry matches the description
+            if model_reports.shape[0] != 0:
+                path = model_reports["path"][0]
+        
+        else:
+            # stable sort
+            model_reports.sort_values(by=priority_list, ascending=False, inplace=True, ignore_index=True)
+            path = model_reports["path"][0]
+            # model_reports.to_csv(self.model_lookup_path, index=False)
+        
+        # load model
+        if path is None:
+            return False
+        
+        self.model = LogisticRegression(max_iter=100000, verbose=2)
         return True
 
 
@@ -1248,6 +1347,7 @@ class LogClassifier:
         self.score = [{"label": label, "precision": p[label], "recall": r[label], \
                        "f1-score": f[label], "support": s[label], "accuracy": a * 100} \
                         for label in labels]
+        self.save_model()
 
 
     def predict(self, X: np.ndarray) -> tuple[np.array, np.array]:
