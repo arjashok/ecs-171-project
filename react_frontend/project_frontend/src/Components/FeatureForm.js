@@ -168,7 +168,7 @@ function FeatureForm(){
                     <input onChange={(e)=>handle(e)} id = "sex" value={data.sex} placeholder = "sex" type="text" name="sex"></input>
                 </div>
                 <div style={{marginBottom: "15px"}}>
-                    <label>What is your age? (0-99):</label>
+                    <label>What is your age? (18-99):</label>
                     <br />
                     <input onChange={(e)=>handle(e)} id = "age" value={data.age} placeholder = "age" type="text" name="age"></input>
                 </div>
