@@ -816,7 +816,7 @@ class MLPClassifier:
             json.load(open(f"../models/hyperparams/{path}.json", "r"))
         )
         self.model = LinearNN(**self.hyperparams).to(self.device)
-        self.model.load_state_dict(torch.load(f"../models/weights/{path}.pt")).to(self.device)
+        self.model.load_state_dict(torch.load(f"../models/weights/{path}.pt"), map_location=self.device)
         # Uncomment the code below if you do not have cuda enabled. Comment out the code above
         # self.model.load_state_dict(torch.load(f"../models/weights/{path}.pt", map_location=torch.device('cpu')))
         self.model.eval()
