@@ -114,7 +114,7 @@ function FeatureForm(){
                     </select>
                 </div>
                 <div style={{marginBottom: "15px"}}>
-                    <label>What is your BMI? (0-100):</label>
+                    <label>What is your BMI? (0-50):</label>
                     <br />
                     <input onChange={(e)=>handle(e)} id = "bmi" value={data.bmi} placeholder = "bmi" type="text" name="bmi"></input>
                 </div>
