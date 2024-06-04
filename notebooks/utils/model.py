@@ -347,7 +347,7 @@ class TreeClassifier:
         """
 
         # wrap predictions
-        return self.model.predict(X)
+        return self.model.predict(self.prepare_data(X))
     
     
     def predict_proba(self, X: np.ndarray) -> np.ndarray:
