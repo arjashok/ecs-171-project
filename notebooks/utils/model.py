@@ -48,6 +48,7 @@ class TreeClassifier:
     data: pd.DataFrame = field(default=None)                                    # dataset
     model: GradientBoostingClassifier = field(default=None)                     # underlying model
     model_lookup_path: str = field(default="../models/model_lookup.csv")        # model lookup
+    scaler: Any = field(default=None)                                           # scaler to use with new preds
 
     # calculated members
     X_train: np.ndarray = field(default=None)                                   # data for training/testing
@@ -75,9 +76,8 @@ class TreeClassifier:
         )
 
         # make augmentations
-        self.X_train, self.X_test, self.y_train, self.y_test = post_split_pipeline(
+        self.X_train, self.X_test, self.y_train, self.y_test, self.scaler = post_split_pipeline(
             self.X_train, self.X_test, self.y_train, self.y_test, self.target, 
-            list(set(self.data.columns) - {self.target}),
             upsample=self.upsample
         )
 
@@ -241,7 +241,7 @@ class TreeClassifier:
         return True
 
 
-    def prepare_data(self, df: pd.DataFrame) -> pd.DataFrame:
+    def prepare_data(self, X: pd.DataFrame) -> pd.DataFrame:
         """
             Applies the necessary transformations to the dataset so we can 
             propagate a prediction through.
@@ -252,7 +252,7 @@ class TreeClassifier:
         """
 
         # normalize
-        X = normalize_features(df, list(df.columns))
+        X = self.scaler.transform(X.values)
 
         # DON'T CONVERT
         return X
@@ -293,7 +293,7 @@ class TreeClassifier:
         """
 
         # predict
-        y_pred = self.predict(self.X_test.values)
+        y_pred = self.predict(self.X_test)
         y_test = self.y_test
 
         # metrics + report
@@ -328,7 +328,7 @@ class TreeClassifier:
         """
 
         # wrap predictions
-        return self.model.predict(X)
+        return self.model.predict(self.prepare_data(X))
 
 
     def optimize_hyperparams(self, grid_search: dict[str, list[int | float | str]]=None,
@@ -508,7 +508,7 @@ class LinearNN(nn.Module):
     
     def predict(self, X, device) -> Any:
         # gen tensors
-        X = torch.from_numpy(X.to_numpy()).to(device)
+        X = torch.from_numpy(X).to(device)
 
         # predict without backprop
         self.eval()
@@ -581,6 +581,7 @@ class MLPClassifier:
         default_factory=lambda: torch.device("cuda" if torch.cuda.is_available else "cpu")
     )                                                                           # device to use; tries for GPU optimization
     scheduler: Any = field(default=None)                                        # learning rate scheduler
+    scaler: Any = field(default=None)                                           # scaler to use with new preds
 
     # calculated members
     X_train: np.ndarray = field(default=None)                                   # data for training/testing
@@ -609,9 +610,8 @@ class MLPClassifier:
         )
 
         # make augmentations
-        self.X_train, self.X_test, self.y_train, self.y_test = post_split_pipeline(
+        self.X_train, self.X_test, self.y_train, self.y_test, self.scaler = post_split_pipeline(
             self.X_train, self.X_test, self.y_train, self.y_test, self.target, 
-            list(set(self.data.columns) - {self.target}),
             upsample=self.upsample
         )
 
@@ -787,7 +787,7 @@ class MLPClassifier:
         return True
 
 
-    def prepare_data(self, df: pd.DataFrame) -> pd.DataFrame:
+    def prepare_data(self, X: pd.DataFrame) -> pd.DataFrame:
         """
             Applies the necessary transformations to the dataset so we can 
             propagate a prediction through.
@@ -798,8 +798,7 @@ class MLPClassifier:
         """
 
         # normalize
-        X = df
-        # X = normalize_features(df, list(df.columns))
+        X = self.scaler.transform(X.values)
 
         # DON'T CONVERT
         return X
@@ -951,23 +950,7 @@ class MLPClassifier:
         """
 
         # wrap
-        return self.model.predict(X, self.device)
-
-        # gen tensors
-        X = torch.from_numpy(X.to_numpy()).to(self.device)
-
-        # predict without backprop
-        self.model.eval()
-
-        with torch.no_grad():
-            # forward pass
-            outputs = self.model.classify_fn(self.model(X))
-
-            # append predictions & the raw prediction value
-            confidence, predictions = torch.max(outputs, 1)
-
-        # wrap predictions
-        return np.array(predictions.cpu()), np.array(confidence.cpu())
+        return self.model.predict(self.prepare_data(X), self.device)
 
 
     def optimize_hyperparams(self, grid_search: dict[str, list[int | float | str]]=None,
@@ -1110,9 +1093,10 @@ class MLPClassifier:
         """
 
         # explain via shap
-        explainer = shap.KernelExplainer(self.model.predict, self.X_train.iloc[:50, :])
-        shap_values = explainer.shap_values(self.X_train.iloc[299, :], nsamples=500)
-        shap.force_plot(explainer.expected_value, shap_values, self.X_test.iloc[299, :])
+        raise NotImplementedError("can't explain model yet...")
+        # explainer = shap.KernelExplainer(self.model.predict, self.X_train.iloc[:50, :])
+        # shap_values = explainer.shap_values(self.X_train.iloc[299, :], nsamples=500)
+        # shap.force_plot(explainer.expected_value, shap_values, self.X_test.iloc[299, :])
 
 
 @dataclass(slots=True)
@@ -1127,6 +1111,7 @@ class LogClassifier:
     data: pd.DataFrame = field(default=None)                                    # dataset
     model: LogisticRegression = field(default=None)                             # underlying model
     model_lookup_path: str = field(default="../models/model_lookup.csv")        # model lookup
+    scaler: Any = field(default=None)                                           # scaler to use with new preds
 
     # calculated members
     X_train: np.ndarray = field(default=None)                                   # data for training/testing
@@ -1154,9 +1139,8 @@ class LogClassifier:
         )
 
         # make augmentations
-        self.X_train, self.X_test, self.y_train, self.y_test = post_split_pipeline(
+        self.X_train, self.X_test, self.y_train, self.y_test, self.scaler = post_split_pipeline(
             self.X_train, self.X_test, self.y_train, self.y_test, self.target, 
-            list(set(self.data.columns) - {self.target}),
             upsample=self.upsample
         )
 
@@ -1283,11 +1267,12 @@ class LogClassifier:
         if path is None:
             return False
         
-        self.model = LogisticRegression(max_iter=100000, verbose=2)
+        self.model = pickle.load(open(f"../models/weights/{path}.pickle", "rb"))
+        self.hyperparams = json.load(open(f"../models/hyperparams/{path}.json", "r"))
         return True
 
 
-    def prepare_data(self, df: pd.DataFrame) -> pd.DataFrame:
+    def prepare_data(self, X: pd.DataFrame) -> pd.DataFrame:
         """
             Applies the necessary transformations to the dataset so we can 
             propagate a prediction through.
@@ -1298,7 +1283,7 @@ class LogClassifier:
         """
 
         # normalize
-        X = normalize_features(df, list(df.columns))
+        X = self.scaler.transform(X.values)
 
         # DON'T CONVERT
         return X
@@ -1315,7 +1300,7 @@ class LogClassifier:
         # self.X_train = self.X_train[sort_index]
         
         self.model.fit(self.X_train.values, self.y_train.values)
-
+    
 
     def test_model(self) -> None:
         """
@@ -1323,7 +1308,7 @@ class LogClassifier:
         """
 
         # predict
-        y_pred, y_conf = self.predict(self.X_test.values)
+        y_pred, y_conf = self.predict(self.X_test)
         y_test = self.y_test
 
         # metrics + report
@@ -1358,6 +1343,7 @@ class LogClassifier:
         """
 
         # wrap
+        X = self.prepare_data(X)
         raw_preds = self.model.predict_proba(X)
         preds = np.argmax(raw_preds, axis=1)
         confs = raw_preds[np.arange(preds.shape[0]), preds]
@@ -1376,7 +1362,7 @@ class LogClassifier:
 
         # unpack coefs
         coefs = list(self.model.coef_[0])
-        feature_names = list(self.data.drop(columns=self.target).columns)
+        feature_names = list(self.model.feature_names_in_)
 
         # print report
         importance = dict(zip(feature_names, coefs))
@@ -1404,8 +1390,12 @@ class LogClassifier:
         # create a lookup of importance based on feature weight and user info
         importance_df.sort_values(by="feature", ascending=False)
         user_info_df.sort_values(by="feature", ascending=False)
+        print(importance_df)
+        print(user_info_df)
         importance_df["weight"] = importance_df["weight"].astype(float) * user_info_df["weight"]
         importance_df.sort_values(by="weight", ascending=True)
+
+        print(importance_df)
 
         # risk analysis: setup trackers
         categories = ["most-harmful", "harmful", "irrelevant", "helpful", "most-helpful"]
@@ -1468,9 +1458,5 @@ The following behaviors are irrelevant to you since you either don't participate
         )
 
         # export
-        print(f"\n\n\n\n\n{final_report}\n\n\n\n\n\n")
-        exit()
         return final_report, importance
-                
-
 

@@ -77,8 +77,8 @@ def split_target(df: pd.DataFrame, target: str, feature_cols: list[str]=None) ->
 
 
 # Feature-Engineering
-def normalize_features(df: pd.DataFrame, features: list[str], how: str="zscore", 
-                       inplace: bool=False) -> None | pd.DataFrame:
+def normalize_features(df: pd.DataFrame, features: list[str]=None, how: str="zscore", 
+                       inplace: bool=False, scaler=None, return_scaler: bool=False) -> None | pd.DataFrame:
     """
         Standardizes all the numeric features.
         @param df: the dataset that we are normalizing the features for
@@ -86,6 +86,13 @@ def normalize_features(df: pd.DataFrame, features: list[str], how: str="zscore",
         @param how: method used to standardize the features
     """
 
+    # edge cases
+    if features is None:
+        features = list(df.columns)
+    if scaler is not None:
+        df[features] = scaler.transform(df[features].values)
+        return df
+    
     # match
     if how == "minmax":
         scaler = MinMaxScaler()
@@ -98,8 +105,13 @@ def normalize_features(df: pd.DataFrame, features: list[str], how: str="zscore",
     if not inplace:
         df = df.copy()
     df[features] = scaler.fit_transform(df[features])
+    
+    if inplace:
+        return None
 
-    return None if inplace else df
+    if return_scaler:
+        return df, scaler
+    return df
 
 
 # Feature-Engineering

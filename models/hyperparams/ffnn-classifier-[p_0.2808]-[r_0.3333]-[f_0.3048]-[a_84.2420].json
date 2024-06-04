@@ -7,5 +7,5 @@
     "batch_size": 64,
     "learning_rate": 5e-05,
     "dropout_rate": 0.9,
-    "classify_fn": "softmax"
+    "classify_fn": "sigmoid"
 }

@@ -24,8 +24,7 @@ def pre_split_pipeline(path: str, target: str) -> Dataset:
 
 def post_split_pipeline(X_train: pd.DataFrame, X_test: pd.DataFrame, 
                         y_train: pd.DataFrame, y_test: pd.DataFrame, 
-                        target: str, features: list[str], 
-                        categorical_features: list[str]=None,
+                        target: str, categorical_features: list[str]=None,
                         upsample: bool=False) -> tuple[np.ndarray, np.ndarray, np.array, np.array]:
     """
         Augments data post split as necessary.
@@ -40,15 +39,16 @@ def post_split_pipeline(X_train: pd.DataFrame, X_test: pd.DataFrame,
     #     categorical_features = list(ds.ordinal_features) + list(ds.nominal_features)
 
     # normalize & upsample train
-    X_train = normalize_features(X_train, features=features)
+    scaler = StandardScaler()
+    X_train.values = scaler.fit_transform(X_train.values)
     train_data = pd.concat([X_train, y_train], axis=1)
     
     if upsample:
         train_data = up_sampling(train_data, target=target, categorical_features=categorical_features)
-
+    
     # normalize test
-    X_test = normalize_features(X_test, features=features)
+    # X_test = normalize_features(X_test, features=features, scaler=scaler)
 
     # export
-    return train_data[features], X_test, train_data[target], y_test
+    return train_data.drop(columns=target), X_test, train_data[target], y_test, scaler
 
