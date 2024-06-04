@@ -816,7 +816,7 @@ class MLPClassifier:
             json.load(open(f"../models/hyperparams/{path}.json", "r"))
         )
         self.model = LinearNN(**self.hyperparams).to(self.device)
-        self.model.load_state_dict(torch.load(f"../models/weights/{path}.pt"), map_location=self.device)
+        self.model.load_state_dict(torch.load(f"../models/weights/{path}.pt", map_location=self.device))
         # Uncomment the code below if you do not have cuda enabled. Comment out the code above
         # self.model.load_state_dict(torch.load(f"../models/weights/{path}.pt", map_location=torch.device('cpu')))
         self.model.eval()
@@ -1488,11 +1488,16 @@ class LogClassifier:
         importance_df.sort_values(by="feature", ascending=False)
         user_info_df.sort_values(by="feature", ascending=False)
         importance_df["weight"] = importance_df["weight"].astype(float) * user_info_df["weight"]
-        importance_df.sort_values(by="weight", ascending=True)
+        importance_df.sort_values(by="weight", key=abs, ascending=False, inplace=True)
+
+        # normalize the importance
+        sum = importance_df["weight"].abs().sum()
+        importance_df["weight"] = importance_df["weight"] / sum
 
         # risk analysis: setup trackers
         categories = ["most-harmful", "harmful", "irrelevant", "helpful", "most-helpful"]
-        thresholds = dict(zip(categories, [-0.3, -0.05, 0.05, 0.05, 0.3]))
+        thresholds = [-0.2, -0.001, 0.001, 0.001, 0.2]
+        thresholds = dict(zip(categories, thresholds))
         grouped_features = dict.fromkeys(categories)
         report = dict(zip(categories, ["" for _ in categories]))
 
@@ -1552,7 +1557,8 @@ The following behaviors are irrelevant to you since you either don't participate
 
         # export
         return final_report, importance
-    
+
+
     def predict_proba(self, X: np.ndarray) -> np.ndarray:
         """
             Generates prediction probabilities for the test data.

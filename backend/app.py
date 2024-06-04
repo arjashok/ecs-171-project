@@ -5,29 +5,29 @@ import inputvalidation as iv
 from modeling import *
 
 
-test_data = {
-    "high_bp": "1",
-    "high_chol": "1",
-    "chol_check": "1",
-    "bmi": "25",
-    "smoker": "0",
-    "stroke": "0",
-    "heart_disease": "0",
-    "physical_activity": "1",
-    "fruits": "1",
-    "veggies": "1",
-    "heavy_drinker": "0",
-    "healthcare": "1",
-    "no_doc_bc_cost": "0",
-    "general_health": "good",
-    "mental_health": "5",
-    "physical_health": "5",
-    "diff_walk": "0",
-    "sex": "1",
-    "age": "30",
-    "education": "high school graduate",
-    "income": "45000"
-}
+# test_data = {
+#     "high_bp": "1",
+#     "high_chol": "1",
+#     "chol_check": "1",
+#     "bmi": "25",
+#     "smoker": "0",
+#     "stroke": "0",
+#     "heart_disease": "0",
+#     "physical_activity": "1",
+#     "fruits": "1",
+#     "veggies": "1",
+#     "heavy_drinker": "0",
+#     "healthcare": "1",
+#     "no_doc_bc_cost": "0",
+#     "general_health": "good",
+#     "mental_health": "5",
+#     "physical_health": "5",
+#     "diff_walk": "0",
+#     "sex": "1",
+#     "age": "30",
+#     "education": "high school graduate",
+#     "income": "45000"
+# }
 
 
 app = Flask(__name__)
