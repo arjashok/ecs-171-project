@@ -34,8 +34,6 @@ def generate_analysis(user_data: dict[str, int | float]) -> tuple[str, dict]:
     if not clf.load_model():
         clf.train_model()
     
-    print(clf.model.coef_)
-    
     return clf.patient_analysis(user_data)
 
 

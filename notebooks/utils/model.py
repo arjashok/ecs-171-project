@@ -516,6 +516,7 @@ class LinearNN(nn.Module):
         with torch.no_grad():
             # forward pass
             outputs = self.classify_fn(self(X))
+            outputs = nn.functional.softmax(outputs, dim=1)
 
             # append predictions & the raw prediction value
             confidence, predictions = torch.max(outputs, 1)
@@ -776,7 +777,6 @@ class MLPClassifier:
         if path is None:
             return False
         
-        path = "ffnn-classifier-[p_0.4159]-[r_0.3971]-[f_0.3869]-[a_76.0446]"
         self.set_hyperparams(
             json.load(open(f"../models/hyperparams/{path}.json", "r"))
         )
@@ -950,7 +950,8 @@ class MLPClassifier:
         """
 
         # wrap
-        return self.model.predict(self.prepare_data(X), self.device)
+        preds, conf = self.model.predict(self.prepare_data(X), self.device)
+        return preds, conf
 
 
     def optimize_hyperparams(self, grid_search: dict[str, list[int | float | str]]=None,
