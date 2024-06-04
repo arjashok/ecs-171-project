@@ -579,6 +579,8 @@ class MLPClassifier:
     loss_fn: Any = field(default=None)                                          # loss for neural network
     device: Any = field(
         default_factory=lambda: torch.device("cuda" if torch.cuda.is_available else "cpu")
+        # If you don't have CUDA Uncomment this line as well as the line of 785
+        # default=torch.device("cpu")
     )                                                                           # device to use; tries for GPU optimization
     scheduler: Any = field(default=None)                                        # learning rate scheduler
     scaler: Any = field(default=None)                                           # scaler to use with new preds
@@ -782,6 +784,8 @@ class MLPClassifier:
         )
         self.model = LinearNN(**self.hyperparams).to(self.device)
         self.model.load_state_dict(torch.load(f"../models/weights/{path}.pt"))
+        # Uncomment the code below if you do not have cuda enabled
+        # self.model.load_state_dict(torch.load(f"../models/weights/{path}.pt", map_location=torch.device('cpu')))
         self.model.eval()
 
         return True
