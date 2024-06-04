@@ -34,6 +34,8 @@ def generate_analysis(user_data: dict[str, int | float]) -> tuple[str, dict]:
     if not clf.load_model():
         clf.train_model()
     
+    print(clf.model.coef_)
+    
     return clf.patient_analysis(user_data)
 
 
@@ -118,5 +120,7 @@ if __name__ == "__main__":
 
     for td in test_data:
         td, _ = input_validation(td)
-        result = generate_prediction(td)
-        print(result)
+        p, c, r= generate_prediction(td)
+        print(p)
+        print(c)
+        print(r)

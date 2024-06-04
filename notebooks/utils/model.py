@@ -508,7 +508,7 @@ class LinearNN(nn.Module):
     
     def predict(self, X, device) -> Any:
         # gen tensors
-        X = torch.from_numpy(X.to_numpy()).to(device)
+        X = torch.from_numpy(X).to(device)
 
         # predict without backprop
         self.eval()
@@ -787,7 +787,7 @@ class MLPClassifier:
         return True
 
 
-    def prepare_data(self, X: pd.DataFrame) -> pd.DataFrame:
+    def prepare_data(self, X: np.ndarray) -> pd.DataFrame:
         """
             Applies the necessary transformations to the dataset so we can 
             propagate a prediction through.
@@ -798,7 +798,7 @@ class MLPClassifier:
         """
 
         # normalize
-        X = self.scaler.transform(X.values)
+        X = self.scaler.transform(X)
 
         # DON'T CONVERT
         return X
@@ -1299,7 +1299,7 @@ class LogClassifier:
         # self.y_train = self.y_train[sort_index]
         # self.X_train = self.X_train[sort_index]
         
-        self.model.fit(self.X_train.values, self.y_train.values)
+        self.model.fit(self.X_train, self.y_train)
     
 
     def test_model(self) -> None:
@@ -1386,6 +1386,9 @@ class LogClassifier:
             "feature": user_info.keys(),
             "weight": [v[0] for v in user_info.values()]
         })
+
+        # ensure the user info is scaled before explaining
+        user_info_df["weight"] = self.scaler.transform(user_info_df["weight"].values.reshape(1, -1)).flatten()
 
         # create a lookup of importance based on feature weight and user info
         importance_df.sort_values(by="feature", ascending=False)
