@@ -7,6 +7,7 @@
 
 # Environment Setup
 import pandas as pd
+import json
 from typing import Any
 
 import sys
@@ -114,6 +115,30 @@ if __name__ == "__main__":
         "age": "50",
         "education": "high school graduate",
         "income": "45000"
+    },
+    {
+        "high_bp": "1",
+        "high_chol": "1",
+        "chol_check": "1",
+        "bmi": "60",
+        "smoker": "1",
+        "stroke": "1",
+        "heart_disease": "1",
+        "physical_activity": "0",
+        "fruits": "1",
+        "veggies": "0",
+        "heavy_drinker": "0",
+        "healthcare": "1",
+        "no_doc_bc_cost": "0",
+        "general_health": "poor",
+        "mental_health": "30",
+        "physical_health": "30",
+        "diff_walk": "1",
+        "sex": "1",
+        "age": "99",
+        "education": "high school graduate",
+        "income": "10000"
+
     }]
 
     for td in test_data:
@@ -121,4 +146,4 @@ if __name__ == "__main__":
         p, c, r= generate_prediction(td)
         print(p)
         print(c)
-        print(r)
+        # print(r)

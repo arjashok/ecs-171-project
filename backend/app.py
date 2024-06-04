@@ -2,7 +2,7 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS, cross_origin
 import numpy as np
 import inputvalidation as iv
-from modeling import generate_prediction
+from modeling import *
 
 
 test_data = {

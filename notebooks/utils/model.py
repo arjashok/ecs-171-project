@@ -610,7 +610,7 @@ class MLPClassifier:
     optimizer: Any = field(default=None)                                        # optimizer function
     loss_fn: Any = field(default=None)                                          # loss for neural network
     device: Any = field(
-        default_factory=lambda: torch.device("cuda" if torch.cuda.is_available else "cpu")
+        default_factory=lambda: torch.device("cuda" if torch.cuda.is_available() else "cpu")
         # If you don't have CUDA uncomment the line as below well as the line of 785
         # default=torch.device("cpu")
     )                                                                           # device to use; tries for GPU optimization
@@ -808,13 +808,15 @@ class MLPClassifier:
         
         # load model
         if path is None:
+            print("failed to load...")
             return False
         
+        print(f"<Model Selected> :: {path}")
         self.set_hyperparams(
             json.load(open(f"../models/hyperparams/{path}.json", "r"))
         )
         self.model = LinearNN(**self.hyperparams).to(self.device)
-        self.model.load_state_dict(torch.load(f"../models/weights/{path}.pt"))
+        self.model.load_state_dict(torch.load(f"../models/weights/{path}.pt")).to(self.device)
         # Uncomment the code below if you do not have cuda enabled. Comment out the code above
         # self.model.load_state_dict(torch.load(f"../models/weights/{path}.pt", map_location=torch.device('cpu')))
         self.model.eval()
@@ -1485,12 +1487,8 @@ class LogClassifier:
         # create a lookup of importance based on feature weight and user info
         importance_df.sort_values(by="feature", ascending=False)
         user_info_df.sort_values(by="feature", ascending=False)
-        print(importance_df)
-        print(user_info_df)
         importance_df["weight"] = importance_df["weight"].astype(float) * user_info_df["weight"]
         importance_df.sort_values(by="weight", ascending=True)
-
-        print(importance_df)
 
         # risk analysis: setup trackers
         categories = ["most-harmful", "harmful", "irrelevant", "helpful", "most-helpful"]
@@ -1519,9 +1517,9 @@ class LogClassifier:
             elif feature in grouped_features["irrelevant"]:
                 report["irrelevant"] += f" * {feature}: \tdoesn't really apply to you in this context; this doesn't imply this behavior doesn't matter, just that for your specific health information, {feature} neither helps nor hurts you\n"
             elif feature in grouped_features["helpful"]:
-                report["helpful"] += f" + {feature}: \treduces risk of pre-diebetes/diabetes by {weight * 100:.2f}%\n"
+                report["helpful"] += f" + {feature}: \treduces risk of pre-diabetes/diabetes by {weight * 100:.2f}%\n"
             elif feature in grouped_features["most-helpful"]:
-                report["most-helpful"] += f" <+> {feature}: \treduces risk of pre-diebetes/diabetes by {weight * 100:.2f}%; if this is above 100, good job!\n"
+                report["most-helpful"] += f" <+> {feature}: \treduces risk of pre-diabetes/diabetes by {weight * 100:.2f}%; if this is above 100, good job!\n"
 
         # check empty
         report = {k: v if v != "" else "Oops... it seems like you don't have much in this category for us to analyze. This is either a really good sign :), or a really bad one :(\n"\
