@@ -90,6 +90,7 @@ function FeatureForm(){
                     <label>Do you have high blood pressure?:</label>
                     <br />
                     <select id="high_bp" value={data.high_bp} onChange={handle}>
+                        <option value=""> --- </option>
                         <option value="0">No</option>
                         <option value="1">Yes</option>
                     </select>
@@ -98,6 +99,7 @@ function FeatureForm(){
                     <label>Do you have high cholestral?:</label>
                     <br />
                     <select id="high_chol" value={data.high_chol} onChange={handle}>
+                        <option value=""> --- </option>
                         <option value="0">No</option>
                         <option value="1">Yes</option>
                     </select>
@@ -106,6 +108,7 @@ function FeatureForm(){
                     <label>Have you had a cholestral check in the past 5 years?:</label>
                     <br />
                     <select id="chol_check" value={data.chol_check} onChange={handle}>
+                        <option value=""> --- </option>
                         <option value="0">No</option>
                         <option value="1">Yes</option>
                     </select>
@@ -119,6 +122,7 @@ function FeatureForm(){
                     <label>Have you smoked 100 cigarettes in your life?:</label>
                     <br />
                     <select id="smoker" value={data.smoker} onChange={handle}>
+                        <option value=""> --- </option>
                         <option value="0">No</option>
                         <option value="1">Yes</option>
                     </select>
@@ -127,6 +131,7 @@ function FeatureForm(){
                     <label>Have you had a stroke?:</label>
                     <br />
                     <select id="stroke" value={data.stroke} onChange={handle}>
+                        <option value=""> --- </option>
                         <option value="0">No</option>
                         <option value="1">Yes</option>
                     </select>
@@ -135,6 +140,7 @@ function FeatureForm(){
                     <label>Do you have a heart disease?:</label>
                     <br />
                     <select id="heart_disease" value={data.heart_disease} onChange={handle}>
+                        <option value=""> --- </option>
                         <option value="0">No</option>
                         <option value="1">Yes</option>
                     </select>
@@ -143,6 +149,7 @@ function FeatureForm(){
                     <label>Have you done physical activity in past 30 days? (0: no | 1: yes):</label>
                     <br />
                     <select id="physical_activity" value={data.physical_activity} onChange={handle}>
+                        <option value=""> --- </option>
                         <option value="0">No</option>
                         <option value="1">Yes</option>
                     </select>
@@ -151,6 +158,7 @@ function FeatureForm(){
                     <label>Do you consume fruits daily?:</label>
                     <br />
                     <select id="fruits" value={data.fruits} onChange={handle}>
+                        <option value=""> --- </option>
                         <option value="0">No</option>
                         <option value="1">Yes</option>
                     </select>
@@ -159,6 +167,7 @@ function FeatureForm(){
                     <label>Do you consume veggies daily?:</label>
                     <br />
                     <select id="veggies" value={data.veggies} onChange={handle}>
+                        <option value=""> --- </option>
                         <option value="0">No</option>
                         <option value="1">Yes</option>
                     </select>
@@ -167,6 +176,7 @@ function FeatureForm(){
                     <label>Are you a heavy drinker? (Men: More than 14 drinks Weekly, Women: More than 7 drinks Weekly) (0: no | 1: yes):</label>
                     <br />
                     <select id="heavy_drinker" value={data.heavy_drinker} onChange={handle}>
+                        <option value=""> --- </option>
                         <option value="0">No</option>
                         <option value="1">Yes</option>
                     </select>
@@ -175,6 +185,7 @@ function FeatureForm(){
                     <label>Do you have any kind of healthcare coverage?:</label>
                     <br />
                     <select id="healthcare" value={data.healthcare} onChange={handle}>
+                        <option value=""> --- </option>
                         <option value="0">No</option>
                         <option value="1">Yes</option>
                     </select>
@@ -183,6 +194,7 @@ function FeatureForm(){
                     <label>In the past 12 months, have you wanted to see a doctor but couldn't because of the cost? (0: no | 1: yes):</label>
                     <br />
                     <select id="no_doc_bc_cost" value={data.no_doc_bc_cost} onChange={handle}>
+                        <option value=""> --- </option>
                         <option value="0">No</option>
                         <option value="1">Yes</option>
                     </select>
@@ -191,6 +203,7 @@ function FeatureForm(){
                     <label>In general, how good is your health?:</label>
                     <br />
                     <select id="general_health" value={data.general_health} onChange={handle}>
+                        <option value=""> --- </option>
                         <option value="excellent">Excellent</option>
                         <option value="very good">Very Good</option>
                         <option value="good">Good</option>
@@ -212,6 +225,7 @@ function FeatureForm(){
                     <label>Do you have serious difficulty walking or climbing stairs?:</label>
                     <br />
                     <select id="diff_walk" value={data.diff_walk} onChange={handle}>
+                        <option value=""> --- </option>
                         <option value="0">No</option>
                         <option value="1">Yes</option>
                     </select>
@@ -220,6 +234,7 @@ function FeatureForm(){
                     <label>What is your biological sex?</label>
                     <br />
                     <select id="sex" value={data.sex} onChange={handle}>
+                        <option value=""> --- </option>
                         <option value="0">Female</option>
                         <option value="1">Male</option>
                     </select>
@@ -233,6 +248,7 @@ function FeatureForm(){
                     <label>What is your education level?:</label>
                     <br />
                     <select id="education" value={data.education} onChange={handle}>
+                        <option value=""> --- </option>
                         <option value="no education">No Education</option>
                         <option value="elementary school">Elementary School</option>
                         <option value="some high school">Some High School</option>
