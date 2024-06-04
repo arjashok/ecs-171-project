@@ -146,7 +146,7 @@ function FeatureForm(){
                     </select>
                 </div>
                 <div style={{marginBottom: "15px"}}>
-                    <label>Have you done physical activity in past 30 days? (0: no | 1: yes):</label>
+                    <label>Have you done physical activity in past 30 days?:</label>
                     <br />
                     <select id="physical_activity" value={data.physical_activity} onChange={handle}>
                         <option value=""> --- </option>
@@ -173,7 +173,7 @@ function FeatureForm(){
                     </select>
                 </div>
                 <div style={{marginBottom: "15px"}}>
-                    <label>Are you a heavy drinker? (Men: More than 14 drinks Weekly, Women: More than 7 drinks Weekly) (0: no | 1: yes):</label>
+                    <label>Are you a heavy drinker? (Men: More than 14 drinks Weekly, Women: More than 7 drinks Weekly):</label>
                     <br />
                     <select id="heavy_drinker" value={data.heavy_drinker} onChange={handle}>
                         <option value=""> --- </option>
@@ -191,7 +191,7 @@ function FeatureForm(){
                     </select>
                 </div>
                 <div style={{marginBottom: "15px"}}>
-                    <label>In the past 12 months, have you wanted to see a doctor but couldn't because of the cost? (0: no | 1: yes):</label>
+                    <label>In the past 12 months, have you wanted to see a doctor but couldn't because of the cost?:</label>
                     <br />
                     <select id="no_doc_bc_cost" value={data.no_doc_bc_cost} onChange={handle}>
                         <option value=""> --- </option>
@@ -231,7 +231,7 @@ function FeatureForm(){
                     </select>
                 </div>
                 <div style={{marginBottom: "15px"}}>
-                    <label>What is your biological sex?</label>
+                    <label>What is your biological sex?:</label>
                     <br />
                     <select id="sex" value={data.sex} onChange={handle}>
                         <option value=""> --- </option>
