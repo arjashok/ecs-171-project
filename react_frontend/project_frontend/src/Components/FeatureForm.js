@@ -73,24 +73,42 @@ function FeatureForm(){
         console.log(newdata)
     }
 
+    const handleNewLines = (text) => {
+        return text.split("\n").map((item, index) => (
+            <span key={index}>
+                {item}
+                <br />
+            </span>
+        ));
+    };
+
     return (
         <div>
         <div style={{display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
             <form onSubmit={(e)=>submit(e)}>
                 <div style={{marginBottom: "15px"}}>
-                    <label>Do you have high blood pressure? (0: no | 1: yes):</label>
+                    <label>Do you have high blood pressure?:</label>
                     <br />
-                    <input onChange={(e)=>handle(e)} id = "high_bp" value={data.high_bp} placeholder="high_bp" type="text" name="high_bp"></input>
+                    <select id="high_bp" value={data.high_bp} onChange={handle}>
+                        <option value="0">No</option>
+                        <option value="1">Yes</option>
+                    </select>
                 </div>
                 <div style={{marginBottom: "15px"}}>
-                    <label>Do you have high cholestral? (0: no | 1: yes):</label>
+                    <label>Do you have high cholestral?:</label>
                     <br />
-                    <input onChange={(e)=>handle(e)} id = "high_chol" value={data.high_chol} placeholder = "high_chol" type="text" name="high_chol"></input>
+                    <select id="high_chol" value={data.high_chol} onChange={handle}>
+                        <option value="0">No</option>
+                        <option value="1">Yes</option>
+                    </select>
                 </div>
                 <div style={{marginBottom: "15px"}}>
-                    <label>Have you had a cholestral check in the past 5 years? (0: no | 1: yes):</label>
+                    <label>Have you had a cholestral check in the past 5 years?:</label>
                     <br />
-                    <input onChange={(e)=>handle(e)} id = "chol_check" value={data.chol_check} placeholder = "chol_check" type="text" name="chol_check"></input>
+                    <select id="chol_check" value={data.chol_check} onChange={handle}>
+                        <option value="0">No</option>
+                        <option value="1">Yes</option>
+                    </select>
                 </div>
                 <div style={{marginBottom: "15px"}}>
                     <label>What is your BMI? (0-100):</label>
@@ -98,54 +116,87 @@ function FeatureForm(){
                     <input onChange={(e)=>handle(e)} id = "bmi" value={data.bmi} placeholder = "bmi" type="text" name="bmi"></input>
                 </div>
                 <div style={{marginBottom: "15px"}}>
-                    <label>Have you smoked 100 cigarettes in your life? (0: no | 1: yes):</label>
+                    <label>Have you smoked 100 cigarettes in your life?:</label>
                     <br />
-                    <input onChange={(e)=>handle(e)} id = "smoker" value={data.smoker} placeholder = "smoker" type="text" name="smoker"></input>
+                    <select id="smoker" value={data.smoker} onChange={handle}>
+                        <option value="0">No</option>
+                        <option value="1">Yes</option>
+                    </select>
                 </div>
                 <div style={{marginBottom: "15px"}}>
-                    <label>Have you had a stroke? (0: no | 1: yes):</label>
+                    <label>Have you had a stroke?:</label>
                     <br />
-                    <input onChange={(e)=>handle(e)} id = "stroke" value={data.stroke} placeholder = "stroke" type="text" name="stroke"></input>
+                    <select id="stroke" value={data.stroke} onChange={handle}>
+                        <option value="0">No</option>
+                        <option value="1">Yes</option>
+                    </select>
                 </div>
                 <div style={{marginBottom: "15px"}}>
-                    <label>Do you have a heart disease? (0: no | 1: yes):</label>
+                    <label>Do you have a heart disease?:</label>
                     <br />
-                    <input onChange={(e)=>handle(e)} id = "heart_disease" value={data.heart_disease} placeholder = "heart_disease" type="text" name="heart_disease"></input>
+                    <select id="heart_disease" value={data.heart_disease} onChange={handle}>
+                        <option value="0">No</option>
+                        <option value="1">Yes</option>
+                    </select>
                 </div>
                 <div style={{marginBottom: "15px"}}>
                     <label>Have you done physical activity in past 30 days? (0: no | 1: yes):</label>
                     <br />
-                    <input onChange={(e)=>handle(e)} id = "physical_activity" value={data.physical_activity} placeholder = "physical_activity" type="text" name="physical_activity"></input>
+                    <select id="physical_activity" value={data.physical_activity} onChange={handle}>
+                        <option value="0">No</option>
+                        <option value="1">Yes</option>
+                    </select>
                 </div>
                 <div style={{marginBottom: "15px"}}>
-                    <label>Do you consume fruits daily? (0: no | 1: yes):</label>
+                    <label>Do you consume fruits daily?:</label>
                     <br />
-                    <input onChange={(e)=>handle(e)} id = "fruits" value={data.fruits} placeholder = "fruits" type="text" name="fruits"></input>
+                    <select id="fruits" value={data.fruits} onChange={handle}>
+                        <option value="0">No</option>
+                        <option value="1">Yes</option>
+                    </select>
                 </div>
                 <div style={{marginBottom: "15px"}}>
-                    <label>Do you consume veggies daily? (0: no | 1: yes):</label>
+                    <label>Do you consume veggies daily?:</label>
                     <br />
-                    <input onChange={(e)=>handle(e)} id = "veggies" value={data.veggies} placeholder = "veggies" type="text" name="veggies"></input>
+                    <select id="veggies" value={data.veggies} onChange={handle}>
+                        <option value="0">No</option>
+                        <option value="1">Yes</option>
+                    </select>
                 </div>
                 <div style={{marginBottom: "15px"}}>
                     <label>Are you a heavy drinker? (Men: More than 14 drinks Weekly, Women: More than 7 drinks Weekly) (0: no | 1: yes):</label>
                     <br />
-                    <input onChange={(e)=>handle(e)} id = "heavy_drinker" value={data.heavy_drinker} placeholder = "heavy_drinker" type="text" name="heavy_drinker"></input>
+                    <select id="heavy_drinker" value={data.heavy_drinker} onChange={handle}>
+                        <option value="0">No</option>
+                        <option value="1">Yes</option>
+                    </select>
                 </div>
                 <div style={{marginBottom: "15px"}}>
-                    <label>Do you have any kind of healthcare coverage? (0: no | 1: yes):</label>
+                    <label>Do you have any kind of healthcare coverage?:</label>
                     <br />
-                    <input onChange={(e)=>handle(e)} id = "healthcare" value={data.healthcare} placeholder = "healthcare" type="text" name="healthcare"></input>
+                    <select id="healthcare" value={data.healthcare} onChange={handle}>
+                        <option value="0">No</option>
+                        <option value="1">Yes</option>
+                    </select>
                 </div>
                 <div style={{marginBottom: "15px"}}>
                     <label>In the past 12 months, have you wanted to see a doctor but couldn't because of the cost? (0: no | 1: yes):</label>
                     <br />
-                    <input onChange={(e)=>handle(e)} id = "no_doc_bc_cost" value={data.no_doc_bc_cost} placeholder = "no_doc_bc_cost" type="text" name="no_doc_bc_cost"></input>
+                    <select id="no_doc_bc_cost" value={data.no_doc_bc_cost} onChange={handle}>
+                        <option value="0">No</option>
+                        <option value="1">Yes</option>
+                    </select>
                 </div>
                 <div style={{marginBottom: "15px"}}>
-                    <label>In general, how good is your health? (excellent | very good | good | fair | poor):</label>
+                    <label>In general, how good is your health?:</label>
                     <br />
-                    <input onChange={(e)=>handle(e)} id = "general_health" value={data.general_health} placeholder = "general_health" type="text" name="general_health"></input>
+                    <select id="general_health" value={data.general_health} onChange={handle}>
+                        <option value="excellent">Excellent</option>
+                        <option value="very good">Very Good</option>
+                        <option value="good">Good</option>
+                        <option value="fair">Fair</option>
+                        <option value="poor">Poor</option>
+                    </select>
                 </div>
                 <div style={{marginBottom: "15px"}}>
                     <label>How many days in the past month was your mental health not good? (0-30):</label>
@@ -158,14 +209,20 @@ function FeatureForm(){
                     <input onChange={(e)=>handle(e)} id = "physical_health" value={data.physical_health} placeholder = "physical_health" type="text" name="physical_health"></input>
                 </div>
                 <div style={{marginBottom: "15px"}}>
-                    <label>Do you have serious difficulty walking or climbing stairs? (0: no | 1: yes):</label>
+                    <label>Do you have serious difficulty walking or climbing stairs?:</label>
                     <br />
-                    <input onChange={(e)=>handle(e)} id = "diff_walk" value={data.diff_walk} placeholder = "diff_walk" type="text" name="diff_walk"></input>
+                    <select id="diff_walk" value={data.diff_walk} onChange={handle}>
+                        <option value="0">No</option>
+                        <option value="1">Yes</option>
+                    </select>
                 </div>
                 <div style={{marginBottom: "15px"}}>
-                    <label>What is your biological sex? (0: female | 1: male)</label>
+                    <label>What is your biological sex?</label>
                     <br />
-                    <input onChange={(e)=>handle(e)} id = "sex" value={data.sex} placeholder = "sex" type="text" name="sex"></input>
+                    <select id="sex" value={data.sex} onChange={handle}>
+                        <option value="0">Female</option>
+                        <option value="1">Male</option>
+                    </select>
                 </div>
                 <div style={{marginBottom: "15px"}}>
                     <label>What is your age? (18-99):</label>
@@ -173,9 +230,16 @@ function FeatureForm(){
                     <input onChange={(e)=>handle(e)} id = "age" value={data.age} placeholder = "age" type="text" name="age"></input>
                 </div>
                 <div style={{marginBottom: "15px"}}>
-                    <label>What is your education level? (No Education | Elementary School | Some High School | High School Graduate | Some College or Technical School | College Graduate):</label>
+                    <label>What is your education level?:</label>
                     <br />
-                    <input onChange={(e)=>handle(e)} id = "education" value={data.education} placeholder = "education" type="text" name="education"></input>
+                    <select id="education" value={data.education} onChange={handle}>
+                        <option value="no education">No Education</option>
+                        <option value="elementary school">Elementary School</option>
+                        <option value="some high school">Some High School</option>
+                        <option value="high school graduate">High School Graduate</option>
+                        <option value="some college or technical school">Some College or Technical School</option>
+                        <option value="college graduate">College Graduate</option>
+                    </select>
                 </div>
                 <div style={{marginBottom: "15px"}}>
                     <label>What is your annual income? (Input a Number without a $):</label>
@@ -202,7 +266,7 @@ function FeatureForm(){
                                     <h3>Prediction Details:</h3>
                                     <p>Prediction: {response.prediction}</p>
                                     <p>Confidence: {response.confidence}</p>
-                                    <p>Analysis: {response.analysis}</p>
+                                    <p>Analysis: {handleNewLines(response.analysis)}</p>
                                 </div>
                             )
                         )}
