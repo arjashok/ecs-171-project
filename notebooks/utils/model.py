@@ -20,6 +20,7 @@ from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.model_selection import GridSearchCV, train_test_split
 from sklearn.metrics import precision_recall_fscore_support, accuracy_score
 from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import roc_curve, auc
 
 import pickle
 import json
