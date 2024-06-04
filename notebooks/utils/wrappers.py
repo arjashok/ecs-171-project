@@ -40,7 +40,7 @@ def post_split_pipeline(X_train: pd.DataFrame, X_test: pd.DataFrame,
 
     # normalize & upsample train
     scaler = StandardScaler()
-    X_train.values = scaler.fit_transform(X_train.values)
+    X_train[X_train.columns] = scaler.fit_transform(X_train[X_train.columns])
     train_data = pd.concat([X_train, y_train], axis=1)
     
     if upsample:

@@ -150,3 +150,4 @@ def up_sampling(df: pd.DataFrame, target: str, categorical_features: list[str]=N
     df_new = df_new.round()
 
     return df_new
+

@@ -508,7 +508,7 @@ class LinearNN(nn.Module):
     
     def predict(self, X, device) -> Any:
         # gen tensors
-        X = torch.from_numpy(X).to(device)
+        X = torch.from_numpy(X.to_numpy()).to(device)
 
         # predict without backprop
         self.eval()
