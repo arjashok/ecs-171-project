@@ -320,7 +320,7 @@ class TreeClassifier:
 
         # Calculate ROC curve and AUC for each class
         for i, label in enumerate(labels):
-            fpr, tpr, _ = roc_curve(y_test == label, y_pred_proba[:, i])
+            fpr, tpr, _ = roc_curve(y_test == label, y_pred_proba[:, label])
             roc_auc = auc(fpr, tpr)
             plt.plot(fpr, tpr, label=f'ROC curve for {label} (area = {roc_auc:0.2f})')
 
@@ -555,6 +555,21 @@ class LinearNN(nn.Module):
 
         # wrap predictions
         return np.array(predictions.cpu()), np.array(confidence.cpu())
+    
+    def predict_proba(self, X, device) -> Any:
+        # gen tensors
+        X = torch.from_numpy(X).to(device)
+
+        # predict without backprop
+        self.eval()
+
+        with torch.no_grad():
+            # forward pass
+            outputs = self.classify_fn(self(X))
+            outputs = nn.functional.softmax(outputs, dim=1)
+
+        # wrap predictions
+        return np.array(outputs.cpu())
 
 
     def test(self, X, y, device) -> Any:
@@ -813,7 +828,7 @@ class MLPClassifier:
             return False
         
         print(f"<Model Selected> :: {path}")
-        
+
         self.set_hyperparams(
             json.load(open(f"../models/hyperparams/{path}.json", "r"))
         )
@@ -953,6 +968,7 @@ class MLPClassifier:
 
         # predict
         y_pred, y_conf = self.predict(self.X_test)
+        # print("conf mlp", y_conf)
         y_test = self.y_test
 
         # metrics + report
@@ -974,10 +990,12 @@ class MLPClassifier:
 
         # Predicting probabilies for ROC
         y_pred_proba = self.predict_proba(self.X_test)
+        print("mlp pred_proba", y_pred_proba)
         
         # Calculate ROC curve and AUC for each class
         for i, label in enumerate(labels):
-            fpr, tpr, _ = roc_curve(y_test == label, y_pred_proba[:, i])
+            fpr, tpr, _ = roc_curve(y_test == label, y_pred_proba[:, label])
+            # fpr, tpr, _ = roc_curve(y_test == label, y_pred_proba[label])
             roc_auc = auc(fpr, tpr)
             plt.plot(fpr, tpr, label=f'ROC curve for {label} (area = {roc_auc:0.2f})')
 
@@ -1011,26 +1029,16 @@ class MLPClassifier:
         preds, conf = self.model.predict(self.prepare_data(X), self.device)
         return preds, conf
     
-    def predict_proba(self, X: np.ndarray) -> np.ndarray:
+    def predict_proba(self, X: np.ndarray) -> tuple[np.array, np.array]:
         """
-            Generates prediction probabilities for the test data.
-            No builtin function from scikit learn to wrap, so doing this manually.
-            
+            Generates predictions for use in the test data.
+
             @param X: data to predict on
         """
-        # Prep
-        X = self.prepare_data(X)
 
-        # Convert to tensor
-        X = torch.from_numpy(X).to(self.device)
-
-        # predict without backprop
-        self.model.eval()
-        with torch.no_grad():
-            # forward pass
-            outputs = self.model.classify_fn(self.model(X))
-
-        return outputs.cpu().numpy()
+        # wrap
+        conf = self.model.predict_proba(self.prepare_data(X), self.device)
+        return conf
 
 
     def optimize_hyperparams(self, grid_search: dict[str, list[int | float | str]]=None,
@@ -1391,6 +1399,7 @@ class LogClassifier:
 
         # predict
         y_pred, y_conf = self.predict(self.X_test)
+        # print("conf log", y_conf)
         y_test = self.y_test
 
         # metrics + report
@@ -1410,9 +1419,11 @@ class LogClassifier:
         print(f"Accuracy: {a * 100:.4f}%")
         print(f"Macro-F1: {np.mean(f):.4f}")
         
+        y_raw_pred = self.predict_proba(self.X_test)
+
         # Calculate ROC curve and AUC for each class
         for i, label in enumerate(labels):
-            fpr, tpr, _ = roc_curve(y_test == label, y_conf)
+            fpr, tpr, _ = roc_curve(y_test == label, y_raw_pred[:, label])
             roc_auc = auc(fpr, tpr)
             plt.plot(fpr, tpr, label=f'ROC curve for {label} (area = {roc_auc:0.2f})')
 
@@ -1447,6 +1458,19 @@ class LogClassifier:
         confs = raw_preds[np.arange(preds.shape[0]), preds]
 
         return preds, confs
+    
+    def predict_proba(self, X: np.ndarray) -> tuple[np.array, np.array]:
+        """
+            Generates predictions for use in the test data.
+
+            @param X: data to predict on
+        """
+
+        # wrap
+        X = self.prepare_data(X)
+        raw_preds = self.model.predict_proba(X)
+
+        return raw_preds
 
 
     def explain_model(self, **kwargs) -> dict[str, float]:
