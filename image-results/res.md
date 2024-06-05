@@ -1,12 +1,10 @@
 
-## With prep_data in predict()
-
-#### Train-Test Split Report
+## Train-Test Split Report
 
 - Train: 512886 obs, 170962 no diabetes [0], 170962 pre-diabetes [1], 170962 diabetes [2]
 - Test: 50736 obs, 42741 no diabetes [0], 926 pre-diabetes [1], 7069 diabetes [2]
 
-### Log Test Report
+## Logistic Model Test Report
 
 log-classifier-[p_0.4394]-[r_0.5193]-[f_0.4118]-[a_60.7912]
 
@@ -17,9 +15,13 @@ log-classifier-[p_0.4394]-[r_0.5193]-[f_0.4118]-[a_60.7912]
 - Accuracy: 60.7912%
 - Macro-F1: 0.4118
 
+- AUC for 0: 0.58
+- AUC for 1: 0.41
+- AUC for 2: 0.43
+
 ![alt text](logcurve.png)
 
-### Tree Test Report
+## Tree Model Test Report
 
 tree-classifier-[p_0.4366]-[r_0.5043]-[f_0.4296]-[a_67.3407]
 
@@ -30,9 +32,13 @@ tree-classifier-[p_0.4366]-[r_0.5043]-[f_0.4296]-[a_67.3407]
 - Accuracy: 67.3407%
 - Macro-F1: 0.4296
 
+- AUC for 0: 0.81
+- AUC for 1: 0.68
+- AUC for 2: 0.68
+
 ![alt text](treecurve.png)
 
-### Ffnn Test Report
+## FFNN Test Report
 
 ffnn-classifier-[p_0.4161]-[r_0.3972]-[f_0.3869]-[a_76.0742]
 
@@ -43,7 +49,11 @@ ffnn-classifier-[p_0.4161]-[r_0.3972]-[f_0.3869]-[a_76.0742]
 - Accuracy: 76.0742%
 - Macro-F1: 0.3869
 
-![alt text](ffnncurve2.png)
+- AUC for 0: 0.57
+- AUC for 1: 0.49
+- AUC for 2: 0.50
+
+![alt text](ffnncurve.png)
 
 
 
