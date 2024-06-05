@@ -233,6 +233,7 @@ class TreeClassifier:
             model_reports.sort_values(by=priority_list, inplace=True, ascending=False, ignore_index=True)
             path = model_reports["path"][0]
         
+        print(f"<Model Selected> :: {path}")
         # load model
         if path is None:
             return False
@@ -329,7 +330,7 @@ class TreeClassifier:
         plt.ylim([0.0, 1.05])
         plt.xlabel('False Positive Rate')
         plt.ylabel('True Positive Rate')
-        plt.title('Receiver Operating Characteristic (ROC) Curve')
+        plt.title('Receiver Operating Characteristic (ROC) Curve - Tree Model')
         plt.legend(loc="lower right")
         plt.show()
 
@@ -812,6 +813,7 @@ class MLPClassifier:
             return False
         
         print(f"<Model Selected> :: {path}")
+        
         self.set_hyperparams(
             json.load(open(f"../models/hyperparams/{path}.json", "r"))
         )
@@ -985,7 +987,7 @@ class MLPClassifier:
         plt.ylim([0.0, 1.05])
         plt.xlabel('False Positive Rate')
         plt.ylabel('True Positive Rate')
-        plt.title('Receiver Operating Characteristic (ROC) Curve')
+        plt.title('Receiver Operating Characteristic (ROC) Curve - MLP Model')
         plt.legend(loc="lower right")
         plt.show()
 
@@ -1341,6 +1343,8 @@ class LogClassifier:
             path = model_reports["path"][0]
             # model_reports.to_csv(self.model_lookup_path, index=False)
         
+        print(f"<Model Selected> :: {path}")
+
         # load model
         if path is None:
             return False
@@ -1418,7 +1422,7 @@ class LogClassifier:
         plt.ylim([0.0, 1.05])
         plt.xlabel('False Positive Rate')
         plt.ylabel('True Positive Rate')
-        plt.title('Receiver Operating Characteristic (ROC) Curve')
+        plt.title('Receiver Operating Characteristic (ROC) Curve - Logistic Model')
         plt.legend(loc="lower right")
         plt.show()
 
