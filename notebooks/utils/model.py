@@ -12,7 +12,6 @@ import seaborn as sns
 import shap
 import torch
 import torch.nn as nn
-import torcheval.metrics as tm
 from torch.optim import Adam
 from torch.utils.data import DataLoader, Dataset
 from skorch import NeuralNetClassifier
@@ -993,16 +992,22 @@ class MLPClassifier:
         y_pred_proba = self.predict_proba(self.X_test)
         print("mlp pred_proba", y_pred_proba)
         
-        y_test = self.y_test.to_numpy()
-        y_test_tensor = torch.tensor(y_test, device=self.device)
-        y_pred_proba_tensor = torch.tensor(y_pred_proba, device=self.device)
-
-        auroc = tm.MulticlassAUROC(num_classes=len(labels), average=None)
-        auroc.update(y_pred_proba_tensor, y_test_tensor)
-        roc_aucs = auroc.compute()
-
+        # Calculate ROC curve and AUC for each class
         for i, label in enumerate(labels):
-            print(f"FFNN AUC for class {label}: {roc_aucs[i]:0.2f}")
+            fpr, tpr, _ = roc_curve(y_test == label, y_pred_proba[:, label])
+            # fpr, tpr, _ = roc_curve(y_test == label, y_pred_proba[label])
+            roc_auc = auc(fpr, tpr)
+            plt.plot(fpr, tpr, label=f'ROC curve for {label} (area = {roc_auc:0.2f})')
+
+        # Plot ROC curve
+        plt.plot([0, 1], [0, 1], 'k--')
+        plt.xlim([0.0, 1.0])
+        plt.ylim([0.0, 1.05])
+        plt.xlabel('False Positive Rate')
+        plt.ylabel('True Positive Rate')
+        plt.title('Receiver Operating Characteristic (ROC) Curve - MLP Model')
+        plt.legend(loc="lower right")
+        plt.show()
 
         # export weights
         self.score = [{"label": label, "precision": p[label], "recall": r[label], \
