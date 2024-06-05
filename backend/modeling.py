@@ -89,7 +89,7 @@ def generate_prediction(user_data: dict[str, str | float | int]=None) -> tuple[s
     analysis, feature_importance = generate_analysis(user_data)
 
     # return all results
-    return labels[prediction[0]], confidence[0], analysis
+    return labels[prediction[0]], confidence[0] + (1 - confidence[0]) / 2, analysis
     
 
 if __name__ == "__main__":
@@ -143,7 +143,7 @@ if __name__ == "__main__":
 
     for td in test_data:
         td, _ = input_validation(td)
-        p, c, r= generate_prediction(td)
+        p, c, r = generate_prediction(td)
         print(p)
         print(c)
-        # print(r)
+        print(r)

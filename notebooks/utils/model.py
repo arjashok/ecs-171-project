@@ -233,6 +233,7 @@ class TreeClassifier:
             model_reports.sort_values(by=priority_list, inplace=True, ascending=False, ignore_index=True)
             path = model_reports["path"][0]
         
+        print(f"<Model Selected> :: {path}")
         # load model
         if path is None:
             return False
@@ -315,7 +316,7 @@ class TreeClassifier:
         print(f"Macro-F1: {np.mean(f):.4f}")
 
         # Predicting probabilies for ROC
-        y_pred_proba = self.predict_proba(self.X_test.values)
+        y_pred_proba = self.predict_proba(self.X_test)
 
         # Calculate ROC curve and AUC for each class
         for i, label in enumerate(labels):
@@ -329,7 +330,7 @@ class TreeClassifier:
         plt.ylim([0.0, 1.05])
         plt.xlabel('False Positive Rate')
         plt.ylabel('True Positive Rate')
-        plt.title('Receiver Operating Characteristic (ROC) Curve')
+        plt.title('Receiver Operating Characteristic (ROC) Curve - Tree Model')
         plt.legend(loc="lower right")
         plt.show()
 
@@ -359,7 +360,7 @@ class TreeClassifier:
         """
 
         # wrap predictions
-        return self.model.predict_proba(X)
+        return self.model.predict_proba(self.prepare_data(X))
 
 
     def optimize_hyperparams(self, grid_search: dict[str, list[int | float | str]]=None,
@@ -812,11 +813,12 @@ class MLPClassifier:
             return False
         
         print(f"<Model Selected> :: {path}")
+        
         self.set_hyperparams(
             json.load(open(f"../models/hyperparams/{path}.json", "r"))
         )
         self.model = LinearNN(**self.hyperparams).to(self.device)
-        self.model.load_state_dict(torch.load(f"../models/weights/{path}.pt"), map_location=self.device)
+        self.model.load_state_dict(torch.load(f"../models/weights/{path}.pt", map_location=self.device))
         # Uncomment the code below if you do not have cuda enabled. Comment out the code above
         # self.model.load_state_dict(torch.load(f"../models/weights/{path}.pt", map_location=torch.device('cpu')))
         self.model.eval()
@@ -971,7 +973,7 @@ class MLPClassifier:
         print(f"Macro-F1: {np.mean(f):.4f}")
 
         # Predicting probabilies for ROC
-        y_pred_proba = self.predict_proba(self.X_test.values)
+        y_pred_proba = self.predict_proba(self.X_test)
         
         # Calculate ROC curve and AUC for each class
         for i, label in enumerate(labels):
@@ -985,7 +987,7 @@ class MLPClassifier:
         plt.ylim([0.0, 1.05])
         plt.xlabel('False Positive Rate')
         plt.ylabel('True Positive Rate')
-        plt.title('Receiver Operating Characteristic (ROC) Curve')
+        plt.title('Receiver Operating Characteristic (ROC) Curve - MLP Model')
         plt.legend(loc="lower right")
         plt.show()
 
@@ -1016,6 +1018,9 @@ class MLPClassifier:
             
             @param X: data to predict on
         """
+        # Prep
+        X = self.prepare_data(X)
+
         # Convert to tensor
         X = torch.from_numpy(X).to(self.device)
 
@@ -1338,6 +1343,8 @@ class LogClassifier:
             path = model_reports["path"][0]
             # model_reports.to_csv(self.model_lookup_path, index=False)
         
+        print(f"<Model Selected> :: {path}")
+
         # load model
         if path is None:
             return False
@@ -1402,13 +1409,10 @@ class LogClassifier:
         print(f"Support: [no diabetes] {s[0]}, [pre-diabetes] {s[1]}, [diabetes] {s[2]}")
         print(f"Accuracy: {a * 100:.4f}%")
         print(f"Macro-F1: {np.mean(f):.4f}")
-
-        # Predicting probabilies for ROC
-        y_pred_proba = self.predict_proba(self.X_test.values)
         
         # Calculate ROC curve and AUC for each class
         for i, label in enumerate(labels):
-            fpr, tpr, _ = roc_curve(y_test == label, y_pred_proba[:, i])
+            fpr, tpr, _ = roc_curve(y_test == label, y_conf)
             roc_auc = auc(fpr, tpr)
             plt.plot(fpr, tpr, label=f'ROC curve for {label} (area = {roc_auc:0.2f})')
 
@@ -1418,7 +1422,7 @@ class LogClassifier:
         plt.ylim([0.0, 1.05])
         plt.xlabel('False Positive Rate')
         plt.ylabel('True Positive Rate')
-        plt.title('Receiver Operating Characteristic (ROC) Curve')
+        plt.title('Receiver Operating Characteristic (ROC) Curve - Logistic Model')
         plt.legend(loc="lower right")
         plt.show()
 
@@ -1488,11 +1492,16 @@ class LogClassifier:
         importance_df.sort_values(by="feature", ascending=False)
         user_info_df.sort_values(by="feature", ascending=False)
         importance_df["weight"] = importance_df["weight"].astype(float) * user_info_df["weight"]
-        importance_df.sort_values(by="weight", ascending=True)
+        importance_df.sort_values(by="weight", key=abs, ascending=False, inplace=True)
+
+        # normalize the importance
+        sum = importance_df["weight"].abs().sum()
+        importance_df["weight"] = importance_df["weight"] / sum
 
         # risk analysis: setup trackers
         categories = ["most-harmful", "harmful", "irrelevant", "helpful", "most-helpful"]
-        thresholds = dict(zip(categories, [-0.3, -0.05, 0.05, 0.05, 0.3]))
+        thresholds = [-0.2, -0.001, 0.001, 0.001, 0.2]
+        thresholds = dict(zip(categories, thresholds))
         grouped_features = dict.fromkeys(categories)
         report = dict(zip(categories, ["" for _ in categories]))
 
@@ -1527,39 +1536,29 @@ class LogClassifier:
 
         # full written analysis
         final_report = (
-f"""
-According to our analysis (an linear approximation of our deep learning model), we've generated the following insights:
-            
-** Harmful Behaviors **
-{report['most-harmful']}
+            f"""
+            According to our analysis (an linear approximation of our deep learning model), we've generated the following insights:
+                        
+            ** Harmful Behaviors **
+            {report['most-harmful']}
 
-We also noted that the following increase your risk for pre-diabetes/diabetes, but to a lesser degree than the previous:
-{report['harmful']}
-
-
-** Helpful Behaviors **
-We haven't forgotten that you've of course done some things right:
-{report['most-helpful']}
-
-{report['helpful']}
+            We also noted that the following increase your risk for pre-diabetes/diabetes, but to a lesser degree than the previous:
+            {report['harmful']}
 
 
-** Irrelevant **
-The following behaviors are irrelevant to you since you either don't participate in them, or we've gauged that it doesn't really matter for you in this context:
-{report['irrelevant']}
-"""
+            ** Helpful Behaviors **
+            We haven't forgotten that you've of course done some things right:
+            {report['most-helpful']}
+
+            {report['helpful']}
+
+
+            ** Irrelevant **
+            The following behaviors are irrelevant to you since you either don't participate in them, or we've gauged that it doesn't really matter for you in this context:
+            {report['irrelevant']}
+            """
         )
 
         # export
         return final_report, importance
-    
-    def predict_proba(self, X: np.ndarray) -> np.ndarray:
-        """
-            Generates prediction probabilities for the test data.
-            
-            @param X: data to predict on
-        """
-
-        # wrap predictions
-        return self.model.predict_proba(X)
 
