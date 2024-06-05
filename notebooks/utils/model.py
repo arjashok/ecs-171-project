@@ -299,7 +299,8 @@ class TreeClassifier:
         y_test = self.y_test
 
         # metrics + report
-        labels = self.data[self.target].unique()
+        labels = list(self.data[self.target].unique())
+        labels.sort()
         p, r, f, s = precision_recall_fscore_support(
             y_test,
             y_pred,
@@ -1403,7 +1404,8 @@ class LogClassifier:
         y_test = self.y_test
 
         # metrics + report
-        labels = self.data[self.target].unique()
+        labels = list(self.data[self.target].unique())
+        labels.sort()
         p, r, f, s = precision_recall_fscore_support(
             y_test,
             y_pred,
@@ -1420,6 +1422,7 @@ class LogClassifier:
         print(f"Macro-F1: {np.mean(f):.4f}")
         
         y_raw_pred = self.predict_proba(self.X_test)
+        print("log pred_proba", y_raw_pred)
 
         # Calculate ROC curve and AUC for each class
         for i, label in enumerate(labels):

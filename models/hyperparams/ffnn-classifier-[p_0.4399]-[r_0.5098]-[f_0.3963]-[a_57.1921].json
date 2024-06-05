@@ -1,0 +1,11 @@
+{
+    "input_size": 21,
+    "output_size": 3,
+    "hidden_size": 196,
+    "num_hidden": 4,
+    "num_epochs": 50,
+    "batch_size": 128,
+    "learning_rate": 5e-05,
+    "dropout_rate": 0.55,
+    "classify_fn": "sigmoid"
+}
