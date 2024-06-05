@@ -315,7 +315,7 @@ class TreeClassifier:
         print(f"Macro-F1: {np.mean(f):.4f}")
 
         # Predicting probabilies for ROC
-        y_pred_proba = self.predict_proba(self.X_test.values)
+        y_pred_proba = self.predict_proba(self.X_test)
 
         # Calculate ROC curve and AUC for each class
         for i, label in enumerate(labels):
@@ -359,7 +359,7 @@ class TreeClassifier:
         """
 
         # wrap predictions
-        return self.model.predict_proba(X)
+        return self.model.predict_proba(self.prepare_data(X))
 
 
     def optimize_hyperparams(self, grid_search: dict[str, list[int | float | str]]=None,
@@ -971,7 +971,7 @@ class MLPClassifier:
         print(f"Macro-F1: {np.mean(f):.4f}")
 
         # Predicting probabilies for ROC
-        y_pred_proba = self.predict_proba(self.X_test.values)
+        y_pred_proba = self.predict_proba(self.X_test)
         
         # Calculate ROC curve and AUC for each class
         for i, label in enumerate(labels):
@@ -1016,6 +1016,9 @@ class MLPClassifier:
             
             @param X: data to predict on
         """
+        # Prep
+        X = self.prepare_data(X)
+
         # Convert to tensor
         X = torch.from_numpy(X).to(self.device)
 
@@ -1402,13 +1405,10 @@ class LogClassifier:
         print(f"Support: [no diabetes] {s[0]}, [pre-diabetes] {s[1]}, [diabetes] {s[2]}")
         print(f"Accuracy: {a * 100:.4f}%")
         print(f"Macro-F1: {np.mean(f):.4f}")
-
-        # Predicting probabilies for ROC
-        y_pred_proba = self.predict_proba(self.X_test.values)
         
         # Calculate ROC curve and AUC for each class
         for i, label in enumerate(labels):
-            fpr, tpr, _ = roc_curve(y_test == label, y_pred_proba[:, i])
+            fpr, tpr, _ = roc_curve(y_test == label, y_conf)
             roc_auc = auc(fpr, tpr)
             plt.plot(fpr, tpr, label=f'ROC curve for {label} (area = {roc_auc:0.2f})')
 
@@ -1532,40 +1532,29 @@ class LogClassifier:
 
         # full written analysis
         final_report = (
-f"""
-According to our analysis (an linear approximation of our deep learning model), we've generated the following insights:
-            
-** Harmful Behaviors **
-{report['most-harmful']}
+            f"""
+            According to our analysis (an linear approximation of our deep learning model), we've generated the following insights:
+                        
+            ** Harmful Behaviors **
+            {report['most-harmful']}
 
-We also noted that the following increase your risk for pre-diabetes/diabetes, but to a lesser degree than the previous:
-{report['harmful']}
-
-
-** Helpful Behaviors **
-We haven't forgotten that you've of course done some things right:
-{report['most-helpful']}
-
-{report['helpful']}
+            We also noted that the following increase your risk for pre-diabetes/diabetes, but to a lesser degree than the previous:
+            {report['harmful']}
 
 
-** Irrelevant **
-The following behaviors are irrelevant to you since you either don't participate in them, or we've gauged that it doesn't really matter for you in this context:
-{report['irrelevant']}
-"""
+            ** Helpful Behaviors **
+            We haven't forgotten that you've of course done some things right:
+            {report['most-helpful']}
+
+            {report['helpful']}
+
+
+            ** Irrelevant **
+            The following behaviors are irrelevant to you since you either don't participate in them, or we've gauged that it doesn't really matter for you in this context:
+            {report['irrelevant']}
+            """
         )
 
         # export
         return final_report, importance
-
-
-    def predict_proba(self, X: np.ndarray) -> np.ndarray:
-        """
-            Generates prediction probabilities for the test data.
-            
-            @param X: data to predict on
-        """
-
-        # wrap predictions
-        return self.model.predict_proba(X)
 
