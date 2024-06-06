@@ -557,6 +557,7 @@ class LinearNN(nn.Module):
         # wrap predictions
         return np.array(predictions.cpu()), np.array(confidence.cpu())
     
+
     def predict_proba(self, X, device) -> Any:
         # gen tensors
         X = torch.from_numpy(X).to(device)
@@ -1030,6 +1031,7 @@ class MLPClassifier:
         preds, conf = self.model.predict(self.prepare_data(X), self.device)
         return preds, conf
     
+
     def predict_proba(self, X: np.ndarray) -> tuple[np.array, np.array]:
         """
             Generates predictions for use in the test data.
