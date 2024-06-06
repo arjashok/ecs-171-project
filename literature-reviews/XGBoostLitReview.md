@@ -57,3 +57,37 @@ The methodology in the evapotranspiration prediction paper employs a variety of 
 
 While both XGBoost and DNN can be effective for predicting daily pan evaporation, the choice between them depends on the specific requirements of the task, such as the need for interpretability, computational resources, and the nature of the input data. In this particular study, XGBoost demonstrated a slight edge over DNN in terms of prediction accuracy and interpretability.
 
+
+
+
+
+
+
+
+
+
+Tej Sidhu
+
+Paper Overview: 
+The paper compares 11 different studies that utilize DNN for tabular datasets. Then the DNN model is trained on other tabular datasets and the results are noted. Then a XGBoost model is created and trained on all the same datasets as DNN. The paper then compares DNN and XGBoost on the original dataset the studies used, and compares DNN and XGBoost on the other datasets.
+
+Findings:
+
+Direct Quote: In our analysis, the deep models were weaker on datasets that did not appear in their original papers, and they were weaker than XGBoost
+In most cases, a deep model performs best on the datasets used in the respective paper, but significantly worse on other datasets. In these situations XGBoost usually outperforms on the alternate datasets
+
+# Make into table
+Relative Performance in comparison to best model on other datasets (Lower value is better):
+Model	Average Relative Performance (%)
+XGBoost	3.34
+NODE	14.21
+DNF-Net	11.96
+TabNet	10.51
+1D-CNN	7.56
+
+
+Analysis:
+Deep Model’s performance is sensitive to the specific dataset
+Useful when creating a specific classifier for your current dataset - Why it outperforms for our diabetes dataset
+Underperforms when generalized to other datasets - Why we included the XGBoost dataset in our package in case others wanted to use it for other disease and condition classification.
+The differences in performance are largely based on the hyperparameter optimization. Without proper hyperparameter optimization, XGBoost almost always outperforms DNN. But with proper hyperparameters for a specific dataset, then DNN can outperform XGBoost
