@@ -992,7 +992,6 @@ class MLPClassifier:
 
         # Predicting probabilies for ROC
         y_pred_proba = self.predict_proba(self.X_test)
-        print("mlp pred_proba", y_pred_proba)
         
         # Calculate ROC curve and AUC for each class
         for i, label in enumerate(labels):
@@ -1424,7 +1423,6 @@ class LogClassifier:
         print(f"Macro-F1: {np.mean(f):.4f}")
         
         y_raw_pred = self.predict_proba(self.X_test)
-        print("log pred_proba", y_raw_pred)
 
         # Calculate ROC curve and AUC for each class
         for i, label in enumerate(labels):
