@@ -69,7 +69,7 @@ While both XGBoost and DNN can be effective for predicting daily pan evaporation
 Tej Sidhu
 
 Paper Overview: 
-The paper compares 11 different studies that utilize DNN for tabular datasets. Then the DNN model is trained on other tabular datasets and the results are noted. Then a XGBoost model is created and trained on all the same datasets as DNN. The paper then compares DNN and XGBoost on the original dataset the studies used, and compares DNN and XGBoost on the other datasets.
+The paper compares 11 different studies that utilize DNN for various different tabular datasets. Then the DNN model is trained on other tabular datasets and the results are noted. Then a XGBoost model is created and trained on all the same datasets as DNN. The paper then compares DNN and XGBoost on the original dataset the studies used, and compares DNN and XGBoost on the other datasets.
 
 Findings:
 
