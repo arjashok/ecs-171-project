@@ -115,7 +115,8 @@ def normalize_features(df: pd.DataFrame, features: list[str]=None, how: str="zsc
 
 
 # Feature-Engineering
-def up_sampling(df: pd.DataFrame, target: str, categorical_features: list[str]=None) -> None | pd.DataFrame:
+def up_sampling(df: pd.DataFrame, target: str, categorical_features: list[str]=None,
+                use_smote: bool=True) -> None | pd.DataFrame:
     """
         Upsamples to balance the data within a range of tolerance.
         Cannot be inplace because you can't replace an existing df with a concatenation.
@@ -126,28 +127,31 @@ def up_sampling(df: pd.DataFrame, target: str, categorical_features: list[str]=N
         @return A DataFrame where the classes in the target variable are balanced through up-sampling.
     """
 
-    # max_size = df[target].value_counts().max()
-    
-    # # A dictionary to temporarily store the upsampled data frames
-    # resampled_data = {}
-
-    # for class_index, group in df.groupby(target):
-    #     resampled_data[class_index] = resample(group,
-    #                                            replace=True,            # Sample with replacement
-    #                                            n_samples=max_size,      # Match number in majority class
-    #                                            random_state=42)
-    
-    # # Creating a new DataFrame by concatenating the upsampled groups
-    # df_new = pd.concat(list(resampled_data.values()), ignore_index=True) # cannot use original df here
 
     # SMOTE
-    if categorical_features is None:
-        categorical_features = "auto"
+    if use_smote:
+        if categorical_features is None:
+            categorical_features = "auto"
+        
+        sm = SMOTE(random_state=42)
+        X_res, y_res = sm.fit_resample(df.drop(columns=target), df[target])
+        df_new = pd.concat([X_res, y_res], axis=1)
+        df_new = df_new.round()
     
-    sm = SMOTE(random_state=42)
-    X_res, y_res = sm.fit_resample(df.drop(columns=target), df[target])
-    df_new = pd.concat([X_res, y_res], axis=1)
-    df_new = df_new.round()
+    else:
+        max_size = df[target].value_counts().max()
+        
+        # A dictionary to temporarily store the upsampled data frames
+        resampled_data = {}
+
+        for class_index, group in df.groupby(target):
+            resampled_data[class_index] = resample(group,
+                                                   replace=True,            # Sample with replacement
+                                                   n_samples=max_size,      # Match number in majority class
+                                                   random_state=42)
+        
+        # Creating a new DataFrame by concatenating the upsampled groups
+        df_new = pd.concat(list(resampled_data.values()), ignore_index=True) # cannot use original df here
 
     return df_new
 

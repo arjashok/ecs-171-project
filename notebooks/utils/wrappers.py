@@ -25,7 +25,7 @@ def pre_split_pipeline(path: str, target: str) -> Dataset:
 def post_split_pipeline(X_train: pd.DataFrame, X_test: pd.DataFrame, 
                         y_train: pd.DataFrame, y_test: pd.DataFrame, 
                         target: str, categorical_features: list[str]=None,
-                        upsample: bool=False) -> tuple[np.ndarray, np.ndarray, np.array, np.array]:
+                        upsample: bool=False, use_smote: bool=True) -> tuple[np.ndarray, np.ndarray, np.array, np.array]:
     """
         Augments data post split as necessary.
     """

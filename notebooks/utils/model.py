@@ -9,12 +9,10 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-import shap
 import torch
 import torch.nn as nn
 from torch.optim import Adam
 from torch.utils.data import DataLoader, Dataset
-from skorch import NeuralNetClassifier
 from tqdm import tqdm
 from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.model_selection import GridSearchCV, train_test_split
@@ -620,6 +618,7 @@ class MLPClassifier:
     hyperparams: dict[str, int | float | str] = field(default=None)             # hyperparams; optional parameter
     upsample: bool = field(default=False)                                       # whether to correct imbalance or not
     loss_balance: bool = field(default=False)                                   # whether to account for imbalance in loss-calc
+    use_smote: bool = field(default=True)                                       # smote to upsample
 
     # inferred members
     data: pd.DataFrame = field(default=None)                                    # dataset
@@ -664,7 +663,8 @@ class MLPClassifier:
         # make augmentations
         self.X_train, self.X_test, self.y_train, self.y_test, self.scaler = post_split_pipeline(
             self.X_train, self.X_test, self.y_train, self.y_test, self.target, 
-            upsample=self.upsample
+            upsample=self.upsample,
+            use_smote=self.use_smote
         )
 
         # report
@@ -1462,6 +1462,7 @@ class LogClassifier:
 
         return preds, confs
     
+
     def predict_proba(self, X: np.ndarray) -> tuple[np.array, np.array]:
         """
             Generates predictions for use in the test data.
