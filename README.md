@@ -3,7 +3,10 @@ Group 6: Arjun Ashok (<arjashok@ucdavis.edu>), Tej Sidhu (<tejsidhu@ucdavis.edu>
 Taha Abdullah (<tmabdullah@ucdavis.edu>), Ayush Tripathi (<atripathi@ucdavis.edu>), 
 Devon Streelman (<djstreelman@ucdavis.edu>)
 
-# Problem Statement
+## Meta-Data
+Demo Link: \url[youtube demo](https://youtu.be/DyyqayuNF2Y)
+
+## Problem Statement
 
 Diabetes affects nearly 38.5 million people in the United States, a
 staggering 11.6% of the population. As common as diabetes is, the
@@ -17,7 +20,7 @@ these features and give us a model to accurately predict diabetes in a
 patient who unknowingly has the condition.
 [(according to the CDC)](https://www.cdc.gov/diabetes/index.html)
 
-# Dataset
+## Dataset
 
 Dataset:
 [diabetes-health-indicators-dataset @ Kaggle](https://www.kaggle.com/datasets/alexteboul/diabetes-health-indicators-dataset), 
@@ -34,7 +37,7 @@ that we had enough noise and variation in the dataset to effectively
 incorporate data cleaning and exploratory data analysis into the
 project.
 
-# Goal
+## Goal
 
 Our goal with this project is to leverage the diabetes survey data for
 (a) an improved, *and fair* (i.e. across income and sex), prediction of
@@ -48,7 +51,7 @@ contexts. To accomplish this, we'll develop package level code
 leveraged by others in the hopes of easy generalization into other
 contexts.
 
-# Deliverables
+## Deliverables
 
 |**Deliverable**                                            | **Due Date**|
 |-----------------------------------------------------------|-----------|
