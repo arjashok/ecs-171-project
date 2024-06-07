@@ -945,7 +945,7 @@ class MLPClassifier:
                 print(f"Epoch {epoch + 1}/{self.model.num_epochs}, Loss: {train_loss:.4f}, Test Loss: {test_loss:.4f}")
 
         # visualization
-        if verbose > 1:
+        if verbose > 0:
             # convert tracker to df
             df = pd.DataFrame(losses)
             df.index = df.index + 1
