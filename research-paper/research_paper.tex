@@ -82,7 +82,7 @@
 \pagestyle{plain}
 
 \begin{abstract}
-Diabetes is one of the most prevalent chronic diseases to date in the world, with numerous harmful long-term effects on the body. As a result, diagnosis of this disease is crucial to prevent damaged organs and blood vessels, which often lead to kidney failure, heart attack, and stroke. Due to a lack of healthcare access across the world, over 30\% of people with diabetes are undiagnosed.  Thus, easy-to-access and accurate identification of this disease utilizing information readily available to undiagnosed individuals is essential to ensure that they get the necessary care. Throughout this article, we employ a deep learner to efficiently and effectively diagnose diabetes. The most common type of diabetes, Type 2 Diabetes, is completely preventable. Hence, we also use a linear approximator to identify diabetes risk factors based on an individual’s lifestyle. The classifier we created has a diabetes-free F1 score of 0.821 and a diabetes F1 score of 0.425. We claim this outperforms all the F1 scores of prior work with our dataset. \\
+Diabetes is one of the most prevalent chronic diseases to date in the world, with numerous harmful long-term effects on the body. As a result, diagnosis of this disease is crucial to prevent damaged organs and blood vessels, which often lead to kidney failure, heart attack, and stroke. Due to a lack of healthcare access across the world, over 30\% of people with diabetes are undiagnosed.  Thus, easy-to-access and accurate identification of this disease utilizing information readily available to undiagnosed individuals is essential to ensure that they get the necessary care. Throughout this research paper, we employ a deep learner to efficiently and effectively diagnose diabetes. The most common type of diabetes, Type 2 Diabetes, is completely preventable. Hence, we also use a linear approximator to identify diabetes risk factors based on an individual’s lifestyle. The classifier we created has a diabetes-free F1 score of 0.821 and a diabetes F1 score of 0.425. We claim this outperforms all the F1 scores of prior work with our dataset. \\
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -93,7 +93,7 @@ Deep Learning, Classification, Tabular, Diabetes, Risk Analysis
     \subsection{Background on Diabetes \& Research Questions}
 Diabetes is a chronic disease that occurs when insulin does not properly regulate the body’s blood sugar. This occurs if the pancreas fails to produce enough insulin, or if the body cannot effectively use the insulin it is currently producing. The most common course of treatment for diabetic individuals is insulin injections, which can be supplemented with or replaced in certain situations with other medications that can lower blood sugar\cite{b2}. \\
 \indent Diabetes can impede an individual’s ability to complete normal activities and the number of people with diabetes is increasing each year. As of 2021, there are over 537 million individuals with diabetes in the world and the number is projected to hit 643 million in 2030\cite{b4}. Furthermore, around 2 million people die from diabetes or diabetes-related complications each year\cite{b2}, with 6.1 million people dying from diabetes or diabetes-related complications in 2021\cite{b4}. \\
-\indent The current statistics paint a very bleak picture of the outlook of diabetes. Luckily, the most common type of Diabetes, Type 2 Diabetes, is completely preventable. If an individual can identify risky behaviors early on, they can adjust their lifestyle to prevent the onset of diabetes. These findings motivated our first question:
+\indent The current statistics paint a very bleak picture for the outlook of diabetes. Luckily, the most common type of diabetes, Type 2 Diabetes, is completely preventable. If an individual can identify risky behaviors early on, they can adjust their lifestyle to prevent the onset of diabetes. These findings motivated our first question:
 
 \begin{enumerate}[label=\roman*.]
     \item given an individual’s lifestyle, can we identify specific risk factors for diabetes? \label{itm:rq1}
@@ -108,7 +108,7 @@ Diabetes is a chronic disease that occurs when insulin does not properly regulat
 
 
 \subsection{Paper Outline}
-To answer these questions, we decided to implement a machine-learning model that can classify individuals as diabetes-free, pre-diabetic, or diabetic, addressing RQ \ref{itm:rq2}. We then use a generalized linear model approximation of the neural network to identify the individual’s Diabetes risk factors, addressing RQ \ref{itm:rq1}. The paper starts by analyzing existing literature and projects to provide a better idea of what state-of-the-art models and techniques researchers currently use to solve similar problems or in similar domains. After this analysis, we can begin to develop our model. We start by finding a dataset and performing exploratory data analysis to understand the data’s characteristics. In this step, we also pre-processed our data to ensure its suitability for model training. After we describe all the preparatory steps, we focus on the methodology we used to select important features, engineer them, and build out our shortlist of models. The models we build and test include gradient boosting, deep neural networks, and logistic regression. We then evaluate these models in the context of our questions and see if we have developed an effective solution.
+To answer these questions, we decided to implement a machine-learning model that can classify individuals as diabetes-free, pre-diabetic, or diabetic, addressing RQ \ref{itm:rq2}. We then use a generalized linear model approximation of the neural network to identify the individual’s diabetes risk factors, addressing RQ \ref{itm:rq1}. The paper starts by analyzing existing literature and projects to provide a better idea of what state-of-the-art models and techniques researchers currently use to solve similar problems or in similar domains. After this analysis, we can begin to develop our model. We start by finding a dataset and performing exploratory data analysis to understand the data’s characteristics. In this step, we also pre-processed our data to ensure its suitability for model training. After we describe all the preparatory steps, we focus on the methodology we used to select important features, engineer them, and build out our shortlist of models. The models we build and test include gradient boosting, deep neural networks, and logistic regression. We then evaluate these models in the context of our questions and see if we have developed an effective solution.
 
 \section{Literature Review}\label{sec:litreview}
 To understand the state of the art in diabetes prediction (without the use of blood sugar/glucose), we evaluated three key areas:
@@ -155,7 +155,7 @@ This study is significant to our research as it demonstrates the effectiveness o
 \subsection{Tabular Classification }
 \subsubsection{Introduction}
 
-The paper\cite{b7} compares 11 different studies that utilize DNN for tabular datasets. Then the DNN model is trained on other tabular datasets and the results are noted. An XGBoost model is created and trained on all the same datasets as DNN. The paper then compares DNN and XGBoost on the original dataset the studies used, and compares DNN and XGBoost on the other datasets.
+The paper\cite{b7} compares 11 different studies that utilize DNN for tabular datasets. Then the DNN model is trained on other tabular datasets and the results are noted. An XGBoost model is created and trained on all the same datasets as DNN. The paper then compares DNN and XGBoost on the original dataset and on the other datasets.
 
 
 \begin{table}[ht]
@@ -238,7 +238,7 @@ During our analysis we noticed how there is significantly more non-diabetes obse
     \end{figure}
 
 \subsection{Standardization}
-Due to the variety in data creating difficult comparisons, we chose to standardize the data. We decided to standardize with both Z-score and . Standardization was necessary to ensure performance was not affected by imbalanced data, possibly resulting in biased predictions towards the majority class.
+Due to the variety in data creating difficult comparisons, we chose to standardize the data. We decided to standardize with Z-score. Standardization was necessary to ensure performance was not affected by imbalanced data, possibly resulting in biased predictions towards the majority class.
 
     \begin{figure}[h]
         \centering
@@ -294,7 +294,7 @@ Due to the variety in data creating difficult comparisons, we chose to standardi
         
     \end{enumerate}
     
-    With this multi-faceted approach, we determined two features that seemed to under-perform in all of these tests relative to the other features. Combined with our manual pruning and considering the context of the prediction, we decided that Difficulty Walking (dichotomous) and Smoker (dichotomous) are both redundant and don’t contribute enough to justify their inclusion.
+    With this multi-faceted approach, we determined two features that seemed to under-perform in all of these tests relative to the other features. Combined with our manual pruning and considering the context of the prediction, we decided that Difficulty Walking (dichotomous) and Smoker (dichotomous) are both redundant and don’t contribute enough to justify their inclusion. However, we do collect this data in our user interface to allow future adjustments to the model and features without having to change the front end.
     
     There were other features that were not perfect throughout all tests, but given that we had a large dataset and no surefire way to determine non-linear relationships (even Principal Component Analysis fails with very non-linear trends \cite{b5}), we opted to err on the side of keeping the features rather than discard unnecessarily.
     
@@ -440,7 +440,7 @@ See Table \ref{tab:results} for the numerical metric results for the three model
 
     \begin{figure}[h]
         \centering
-        \includegraphics[scale = 0.34]{stratcomparison_high_dpi.png}
+        \includegraphics[scale = 0.30]{stratcomparison_high_dpi.png}
         \label{fig:stratcomparison}
         \caption{Class imbalance handling techniques}
     \end{figure}
@@ -632,7 +632,7 @@ See Table \ref{tab:results} for the numerical metric results for the three model
             \midrule
             Literature Review & Review other research papers that utilize ML for classification tasks & 05/05 & 05/03 \\
             \midrule
-            EDA & Develop an understanding of our dataset. Preprocess where necessary. & 05/05 & 05/01 \\
+            EDA & Develop an understanding of our dataset. Pre-process where necessary. & 05/05 & 05/01 \\
             \midrule
             Feature Selection & Select the most important features to train our model. & 05/05 & 05/04 \\
             \midrule
@@ -640,7 +640,7 @@ See Table \ref{tab:results} for the numerical metric results for the three model
             \midrule
             Model Evaluation and Selection & Evaluate and compare the models. Select the model that performs the best. & 05/26 & 05/28 \\
             \midrule
-            Develop User Interface & Develop a frontend from where we can deploy our model. & 06/01 & 06/02 \\
+            Develop User Interface & Develop a front-end from where we can deploy our model. & 06/01 & 06/02 \\
             \midrule
             Complete Research Paper & Write and refine the research paper. & 06/08 & 06/07 \\
             \bottomrule
@@ -650,7 +650,7 @@ See Table \ref{tab:results} for the numerical metric results for the three model
         \label{tab:roadmap}
     \end{table*}
 
-In this paper, we claim that our Deep Neural Network classifier offers a balanced classification for individuals regarding diabetes (macro F1 score = 0.4251) and diabetes-free (F1-score 0.8206) classifications. However, the model struggles to identify individuals as pre-diabetic (F1 score = 0.0502). Therefore, we conclude that our model is effective for the binary classifications of diabetes and diabetes-free, but it falls short when we incorporate a pre-diabetes classification. Thus, in response to (ii), we were able to find an effective solution, but ideally, we would find a way to raise our F1 score for pre-diabetes. Fortunately, the struggles we face with identifying pre-diabetes does not impact our ability to successfully answer (i). Although the model failed to classify pre-diabetes, our proficient classification of diabetes versus diabetes-free is sufficient enough to accurately decipher an individual’s risk factors. On all of our tests, the individual’s highlighted risk factors came in line with the risk factors we were expecting. As a result, the model was able to successfully identify risk factors in an individual given their lifestyle. However, since identifying risk factors is a relatively subjective test that primarily depends on the model weights, the success of the identification is heavily dependent on the effectiveness of our classifications. Therefore, if we utilized more advanced techniques to improve our model, it would likely lead to a more accurate identification of risk factors. \\
+In this paper, we claim that our Deep Neural Network classifier offers a balanced classification for individuals regarding diabetes (macro F1 score = 0.4251) and diabetes-free (F1-score 0.8206) classifications. However, the model struggles to identify individuals as pre-diabetic (F1 score = 0.0502). Therefore, we conclude that our model is effective for the binary classifications of diabetes and diabetes-free, but it falls short when we incorporate a pre-diabetes classification. Thus, in response to RQ \ref{itm:rq2}, we were able to find an effective solution, but ideally, we would find a way to raise our F1 score for pre-diabetes. Fortunately, the struggles we face with identifying pre-diabetes does not impact our ability to successfully answer RQ \ref{itm:rq1}. Although the model failed to classify pre-diabetes, our proficient classification of diabetes versus diabetes-free is sufficient enough to accurately decipher an individual’s risk factors. On all of our tests, the individual’s highlighted risk factors came in line with the risk factors we were expecting. As a result, the model was able to successfully identify risk factors in an individual given their lifestyle. However, since identifying risk factors is a relatively subjective test that primarily depends on the model weights, the success of the identification is heavily dependent on the effectiveness of our classifications. Therefore, if we utilized more advanced techniques to improve our model, it would likely lead to a more accurate identification of risk factors. \\
 \indent The logical progression for this project would be to explore other approaches to create a more effective model. In a future implementation, it would be worthwhile to utilize advanced pre-processing techniques and remove the pre-diabetes classification. The scarcity of pre-diabetes samples likely confused our model and this issue was aggravated by upsampling. Because we initially did not have a representative sample of pre-diabetes, when we upsampled, we made our diabetes and diabetes-free samples less representative, thus removing the advantage of choosing a large dataset. Hence, if we focused on a diabetes vs. diabetes-free classifier, it would likely yield a more effective model. Additionally, considering more complicated modeling techniques like ensemble learning exist, they could also potentially increase our model’s effectiveness. Unfortunately, we had already committed to the modeling techniques we learned earlier in the quarter, so we were unable to test out the more complicated techniques discussed later on. However, incorporating these advanced techniques would likely generate more accurate and effective classifications. Hence, if we were to continue on this project, we should could improve on our model by removing the pre-diabetes label and leveraging more advanced techniques like ensemble learning.
 
 \section{Project Roadmap, Repository, and Contributions}\label{sec:roadmap}
@@ -679,7 +679,6 @@ In this paper, we claim that our Deep Neural Network classifier offers a balance
         \item \textit{Ayush Tripathi}: analyzed the dataset distributions and interpreted correlations within data; evaluated various class imbalance handling techniques by interpreting model performances; sourced research, condensed, and compiled literature review; compiled and formatted references. 
     \end{itemize}
 
-\clearpage
 \begin{thebibliography}{00}
 \bibitem{b1} G. Eason, B. Noble, and I. N. Sneddon, ``On certain integrals of Lipschitz-Hankel type involving products of Bessel functions,'' Phil. Trans. Roy. Soc. London, vol. A247, pp. 529--551, April 1955.
 
